@@ -1,0 +1,24 @@
+[ippo O3 N=100 s1] it    1 t=2s u=-6.167 kappa=0.906 hours=0.499 p=0.498 gini=0.226 J=-106.33 ent=-0.23
+[ippo O3 N=100 s1] it   20 t=41s u=-3.668 kappa=5.252 hours=0.333 p=0.744 gini=0.338 J=-83.73 ent=-1.87
+[ippo O3 N=100 s1] it   40 t=82s u=-3.461 kappa=6.220 hours=0.332 p=0.751 gini=0.382 J=-82.53 ent=-2.37
+[ippo O3 N=100 s1] it   60 t=121s u=-3.402 kappa=6.562 hours=0.330 p=0.744 gini=0.413 J=-82.15 ent=-2.57
+[ippo O3 N=100 s1] it   80 t=161s u=-3.399 kappa=6.629 hours=0.336 p=0.743 gini=0.422 J=-82.06 ent=-2.71
+[ippo O3 N=100 s1] it  100 t=202s u=-3.371 kappa=7.094 hours=0.335 p=0.752 gini=0.415 J=-81.82 ent=-2.84
+[ippo O3 N=100 s1] it  120 t=239s u=-3.347 kappa=6.977 hours=0.331 p=0.754 gini=0.419 J=-81.86 ent=-2.92
+[ippo O3 N=100 s1] it  140 t=279s u=-3.329 kappa=7.385 hours=0.334 p=0.753 gini=0.440 J=-81.64 ent=-2.97
+[ippo O3 N=100 s1] it  160 t=318s u=-3.325 kappa=7.206 hours=0.340 p=0.736 gini=0.469 J=-81.72 ent=-3.01
+[ippo O3 N=100 s1] it  180 t=357s u=-3.325 kappa=7.286 hours=0.338 p=0.753 gini=0.434 J=-81.65 ent=-3.06
+[ippo O3 N=100 s1] it  200 t=394s u=-3.294 kappa=7.475 hours=0.327 p=0.761 gini=0.414 J=-81.65 ent=-3.11
+[ippo O3 N=100 s1] it  220 t=434s u=-3.290 kappa=7.298 hours=0.333 p=0.745 gini=0.454 J=-81.71 ent=-3.14
+[ippo O3 N=100 s1] it  240 t=474s u=-3.318 kappa=7.314 hours=0.335 p=0.746 gini=0.449 J=-81.64 ent=-3.15
+[ippo O3 N=100 s1] it  260 t=514s u=-3.321 kappa=7.585 hours=0.333 p=0.742 gini=0.465 J=-81.56 ent=-3.15
+[ippo O3 N=100 s1] it  280 t=554s u=-3.293 kappa=7.221 hours=0.333 p=0.751 gini=0.434 J=-81.65 ent=-3.17
+[ippo O3 N=100 s1] it  300 t=594s u=-3.308 kappa=7.516 hours=0.329 p=0.752 gini=0.439 J=-81.52 ent=-3.18
+done
+   BR validation at start (= MARL policy): 0.0000
+   BR it 20: deviator mean per-period utility -3.2821, validation gain -0.1131
+   BR it 40: deviator mean per-period utility -3.3438, validation gain -0.0851
+   BR it 60: deviator mean per-period utility -3.3449, validation gain -0.2456
+   BR it 80: deviator mean per-period utility -3.3190, validation gain -0.0954
+   BR it 100: deviator mean per-period utility -3.2692, validation gain -0.0645
+ippo_O3_N100_tau0_psi1_s1: kappa 7.612 (B1 8.713, B1-sim 8.745) hours 0.329 gini 0.438/0.545 welfare loss 1.27% p_gap 0.064 h_gap 0.016 DP-BR gain 0.44% PPO-BR gain 0.00%

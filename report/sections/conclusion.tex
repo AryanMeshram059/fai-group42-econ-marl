@@ -1,0 +1,25 @@
+\section{Discussion and Conclusion}
+\textbf{Summary.} Placing MARL households and an exact equilibrium solver in the \emph{same} finite-$N$ economy turns
+qualitative claims of the form ``learners behave like an economy'' into measured gaps. Shared-policy PPO learns the
+intensive margins well: hours, the saving ratio away from the constraint, and the responses to taxes. Welfare comes
+within $1.4\%$ of equilibrium. Two things are systematically missed: precautionary wealth accumulation (a
+${\approx}14\%$ capital shortfall that persists across $N$, observation levels and tax regimes) and the shape of the
+wealth distribution (too few constrained households, too thin a right tail). We conjecture that both stem from the long-horizon
+credit-assignment problem. The benefit of an extra unit of saving arrives decades later and only in rare bad states,
+so it is weak in a 200-step, $\gamma=0.96$ return and easy for a smooth stochastic policy to under-fit. This is also why
+model-free exploitability (PPO-BR $\approx0$) underestimates the model-based one (DP-BR $0.4\%$).
+
+\textbf{Hypotheses.} H1 supported; H2 not supported at our budget (learning floor ${\approx}13\%$ dominates the
+$O(1/N)$ term); H3 partially (prices help, aggregates do not); H4 supported for aggregate signs and magnitudes, not for
+inequality.
+
+\textbf{Limitations.} (i) Training budget: a single learning rate was tuned on one seed and every run uses 300 iterations;
+budgets differ across $N$ because economies per iteration are integers, which confounds E2. (ii) DP best responses
+assume constant prices, which is inaccurate at $N=10$ and requires a finite-horizon variant when learned returns
+exceed $1/\beta$. (iii) Only proportional taxes ($\xi=0$) were run, although the simulator supports HSV progressivity
+and asset taxes. (iv) Evaluation starts every economy from the same lognormal draw, and stationary statistics use 200
+periods after a 300-period burn-in.
+
+\textbf{Future work.} Longer training or curricula on the horizon to test whether the capital floor is a sample-budget
+effect; recurrent policies; progressive taxation; and a learning government on top of the household equilibrium, as in
+TaxAI, with B1 as a reference for the households' response.

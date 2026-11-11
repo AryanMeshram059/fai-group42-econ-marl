@@ -1,0 +1,14 @@
+\begin{abstract}
+We ask how close decentralized multi-agent reinforcement learning (MARL) gets to the exact competitive equilibrium of
+a heterogeneous-agent economy. We build a vectorized Bewley--Aiyagari simulator with endogenous labour, taxes and
+lump-sum rebates whose resource constraint holds to $10^{-9}$. We solve the same finite-state economy exactly with a
+known-model benchmark (endogenous-grid dynamic programming, histogram distribution and a Brent market-clearing fixed
+point), and train shared-policy IPPO and MAPPO households in it (49 runs over five population sizes, four observation
+levels and seven tax regimes). Learners match equilibrium labour supply to within $0.003$ hours and lose only
+$1.3$--$1.4\%$ of consumption-equivalent welfare, against $13.5\%$ for the best constant policy. However, they
+under-accumulate capital by about $14\%$, produce too little wealth inequality (Gini $0.46$ vs.\ $0.55$), and remain
+exploitable: an exact best response gains $0.4\%$, a gain that a PPO-trained deviator fails to find. The capital gap
+does not shrink as $1/N$ but sits on a learning floor; observing prices reduces it, while observing aggregates does
+not. Under income taxes, learners reproduce the signs and roughly the elasticities of the equilibrium capital and labour
+responses, but not the distributional response.
+\end{abstract}

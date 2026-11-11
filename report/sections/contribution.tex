@@ -1,0 +1,30 @@
+\section{Code Availability and Reproducibility}\label{sec:repo}
+All code, trained models, raw results and figure scripts are in
+\url{https://github.com/AryanMeshram059/fai-group42-econ-marl}. Every number and figure in this report is
+regenerated from the stored runs by \texttt{python scripts/make\_report\_assets.py}; the full pipeline is
+\texttt{scripts/calibrate.py} $\rightarrow$ \texttt{run\_benchmarks.py} $\rightarrow$ \texttt{run\_experiments.py}
+(49 runs, resumable) $\rightarrow$ \texttt{make\_report\_assets.py}, and \texttt{pytest tests} runs the 16 accounting
+and equilibrium tests. All experiments ran on a 12-core laptop CPU (no GPU); the whole grid takes about 2.5 hours
+with five parallel workers.
+
+\section{Contribution}
+Tasks follow the allocation in our project proposal; the \emph{Status} column records whether the assigned task was
+delivered in the final submission.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}p{3.1cm}p{9.6cm}l@{}}
+\toprule
+Member & Assigned task & Status\\
+\midrule
+Aryan Meshram & Economic environment (C1): vectorized simulator, exact accounting tests, Rouwenhorst process,
+calibration of $\chi$ and initial wealth & Fulfilled\\
+Chaitanya Sharma & Known-model benchmark (C2, C3): EGM household solver with endogenous labour, histogram distribution,
+Brent equilibrium, VFI cross-check, baselines B0/B2/Random, sanity checks & Fulfilled\\
+Pratik Kumar Dhaker & MARL (C4): shared-policy IPPO and MAPPO with Beta policies, observation levels O0--O3,
+learning-rate tuning, multi-seed training of the 49-run grid & Fulfilled\\
+Saksham Chourasia & Evaluation (C5, C6): aggregate/policy/welfare/inequality metrics, DP and PPO best-response
+exploitability, experiments E1--E4, figures and report & Fulfilled\\
+\bottomrule
+\end{tabular}
+\end{table}

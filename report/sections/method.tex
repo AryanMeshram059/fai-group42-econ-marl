@@ -1,0 +1,115 @@
+\section{Methodology}\label{sec:method}
+The system has six components (C1--C6), each a module of the repository.
+
+\subsection{C1: Vectorized simulator with exact accounting}
+The economy is simulated as $M$ independent economies of $N$ households held in $[M,N]$ \texttt{float64} PyTorch
+tensors, so one call advances all households of all economies by one period in the order of
+Section~2. Actions are normalised to $[0,1]^2$ and mapped to $p\in[0.001,0.99]$ and $h\in[0,1]$. Safeguards:
+$L_{\min}=10^{-3}N$, $\kappa\in[0.5,60]$, and a consumption floor $c\ge10^{-3}$ used \emph{only} inside the utility
+(never in the budget), so accounting stays exact. An automated test (\texttt{tests/test\_accounting.py}) simulates 16
+economies for 50 periods under random actions for 8 configurations ($N\in\{10,100\}$, four
+$(\tau,\tau^a,\psi,\xi)$ settings including a progressive schedule) and asserts
+$|Y_t-C_t-K_{t+1}+(1-\delta)K_t-G_t|/Y_t<10^{-9}$ at every non-safeguarded step; it also checks
+$a'+c=m$, $N\nu+G=S$, and $WL+RK=Y$.
+
+\textbf{Calibration.} $\alpha=0.36$, $\delta=0.06$, $\beta=0.96$, $\theta=1.5$, $\varphi=2$, $\rho_e=0.9$,
+$\sigma_e=0.2$. $\chi=29.70$ is chosen by Brent's method so that mean hours in the $\tau=0$ B1 equilibrium equal
+$h_{\max}/3$, and initial wealth is lognormal with $\sigma_a=1.8$ and mean equal to B1 capital per household
+($2.953$) (\texttt{scripts/calibrate.py}).
+
+\subsection{C2: Known-model benchmark B1}
+Algorithm~\ref{alg:b1} computes the stationary recursive competitive equilibrium. The household problem is solved
+with the endogenous grid method (EGM)~\cite{egm} extended to endogenous labour: on a 200-point power-spaced grid
+of next-period assets $a'\in[0,400]$, the Euler equation gives consumption, the intratemporal condition
+$\chi h^{\varphi}=c^{-\theta}(1-\tau)We$ gives hours, and the budget inverts to current assets. Below the
+endogenous grid's first point the borrowing constraint binds; there $a'=0$ and $h$ solves
+$\chi h^\varphi=(R_aa+w_eh+\nu)^{-\theta}w_e$ by bisection ($R_a=1+(1-\tau)r-\tau^a$, $w_e=(1-\tau)We$). The
+stationary distribution uses Young's histogram method~\cite{young} on a 1000-point grid (sparse transition matrix,
+power iteration to $10^{-13}$), and $\kappa^\star$ is found by Brent's method on $K^s/L^s-\kappa$ inside the bracket
+$r\in[0,\,((1/\beta-1)+\tau^a)/(1-\tau))$ with a damped fixed point for $\nu^\star$ at each $\kappa$.
+\emph{Validation:} market clearing holds to $10^{-6}$; mean (max) $\log_{10}$ Euler-equation errors are
+\input{numbers/euler}; and a brute-force value-function iteration on a separate grid reproduces the EGM saving and
+hours policies to within grid resolution (\texttt{tests/test\_b1.py}, 6 tests).
+
+\begin{algorithm}[t]
+\caption{B1: stationary equilibrium with endogenous labour (EGM + histogram + Brent)}\label{alg:b1}
+\small
+\begin{algorithmic}[1]
+\Function{Household}{$W,r,\nu$} \Comment{EGM; $c_0$ = constrained guess}
+\Repeat
+  \State $\tilde c(a'_j,e)\gets\big(\beta R_a\sum_{e'}P(e'|e)\,c(a'_j,e')^{-\theta}\big)^{-1/\theta}$;\;
+  $\tilde h\gets\mathrm{clip}\big((\tilde c^{-\theta}w_e/\chi)^{1/\varphi}\big)$
+  \State $\tilde a\gets(\tilde c+a'_j-w_e\tilde h-\nu)/R_a$;\; $c(a,e)\gets$ interpolate $(\tilde a,\tilde c)$; constrained FOC for $a<\tilde a_0$
+\Until{$\max|c^{new}-c|/(1+c)<10^{-10}$}
+\EndFunction
+\Function{Excess}{$\kappa$}
+  \State $W,r\gets$ prices$(\kappa)$;\; $\nu\gets0$
+  \Repeat\; policy $\gets$\Call{Household}{$W,r,\nu$};\; $\mu\gets$ Young histogram fixed point;\; $\nu\gets\frac12\nu+\frac12\psi S(\mu)$
+  \Until{$|\Delta\nu|<10^{-11}$}
+  \State \Return $K^s(\mu)/L^s(\mu)-\kappa$
+\EndFunction
+\State $\kappa^\star\gets$ Brent root of \Call{Excess}{$\cdot$};\; \Return policy, $\mu^\star$, $(\kappa^\star,\nu^\star)$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{C3: Baselines}
+\textbf{B1-in-simulator:} the DP policy is executed by all $N$ households in the finite-$N$ simulator. A household
+in state $(a,e)$ plays $p=a'(a,e)/m^\star(a,e)$ and $h=h(a,e)$, where $m^\star$ is cash-on-hand at equilibrium
+prices, so B1 and MARL are compared under identical dynamics, safeguards and random numbers.
+\textbf{B0:} the $\tau=0$ economy, the reference for tax responses in E4 (in E1, where $\tau=0$, B0 and B1 coincide).
+\textbf{B2:} the best constant policy $(\bar p,\bar h)$ shared by everyone, found by a $19\times15$ grid search in
+the simulator followed by an $11\times11$ refinement. \textbf{Random:} uniform actions.
+
+\subsection{C4: Shared-policy IPPO and MAPPO}
+All households share one actor (parameter sharing) but each maximizes its \emph{own} discounted utility, so the game
+stays general-sum. The actor is a 2$\times$64 tanh MLP that outputs the concentrations $1+\mathrm{softplus}(\cdot)$ of
+two independent Beta distributions over $(\hat p,\hat h)\in(0,1)^2$; Beta policies respect the action bounds without
+clipping bias. IPPO~\cite{ippo} uses a local critic $V(o_i)$; MAPPO~\cite{mappo} uses a centralized critic
+$V(o_i,g(s))$ where $g$ is a permutation-invariant 11-dimensional summary of the whole economy (mean wealth,
+5 wealth quantiles, dispersion, mean productivity, lagged prices and labour). Training follows PPO~\cite{ppo}
+with GAE~\cite{gae} (Algorithm~\ref{alg:ppo}). The RL discount equals the household discount $\beta$, so the RL objective
+\emph{is} the household's objective; episodes last 200 periods from a fresh lognormal draw and are bootstrapped with
+$V(s_{200})$ because the economic problem has an infinite horizon. Rewards are scaled by $1-\beta$. Each iteration
+collects $8\times10^4$ household-steps ($M=8\times10^4/(200N)$ economies; for $N=1000$, $M=1$ gives $2\times10^5$),
+followed by 4 epochs of minibatch (8192) Adam updates; learning rate $10^{-3}$ linearly decayed to 0 over 300
+iterations, clip $0.2$, $\lambda=0.95$, entropy $10^{-3}$, value coefficient $0.5$, gradient-norm clip $0.5$.
+The learning rate was selected from $\{3\cdot10^{-4},10^{-3}\}$ on a single tuning seed.
+
+\begin{algorithm}[t]
+\caption{Shared-policy IPPO / MAPPO for $N$ households}\label{alg:ppo}
+\small
+\begin{algorithmic}[1]
+\For{iteration $k=1,\dots,300$}
+  \State reset $M$ economies with lognormal wealth and stationary productivity
+  \For{$t=0,\dots,199$} \Comment{all $M\cdot N$ households act in parallel}
+    \State $o_i^t\gets$ \Call{Obs}{$s^t$, level}; sample $(\hat p_i^t,\hat h_i^t)\sim\mathrm{Beta}(\pi_\vartheta(o_i^t))$; step simulator; store $(o_i^t,a_i^t,R_i^t,\log\pi)$
+  \EndFor
+  \State critic input $x_i^t=o_i^t$ (IPPO) or $[o_i^t,g(s^t)]$ (MAPPO); per-household GAE with $\gamma=\beta$, bootstrap at $t=200$
+  \State 4 epochs of clipped-surrogate + value + entropy loss on minibatches pooled over households
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{C5: Evaluation metrics}
+Policies are evaluated deterministically (Beta mean) in 8 economies for 500 periods from a common lognormal draw with
+\emph{common random numbers} across all policies. Stationary statistics are averaged over $t\in[300,500)$.
+\textbf{Aggregate gap:} $|\kappa^{\rm MARL}-\kappa^\star|/\kappa^\star$, plus hours and saving-rate ($\sum a'/\sum m$) gaps.
+\textbf{Policy gap:} $\sum_{a,e}\mu^\star(a,e)\,|p^{\rm MARL}(a,e)-p^{\rm B1}(a,e)|$ and likewise for $h$, with the
+learner's aggregate inputs fixed at their long-run averages.
+\textbf{Welfare:} $\bar J$ is the average discounted utility over the 500 periods. The consumption-equivalent
+\emph{welfare loss} $\lambda$ of a policy relative to B1-in-simulator solves
+$(1+\lambda)^{1-\theta}U_c-U_h=\bar J^{\rm B1}$, with $U_c,U_h$ the consumption and labour parts of its welfare
+(closed form).
+\textbf{Inequality:} wealth Gini and top-10\% share. \textbf{Convergence:} the first evaluation (every 20 iterations)
+at which $\bar J$ closes 95\% of its total improvement. \textbf{Seeds:} 5 for E1, 3 for E2--E4 (mean $\pm$ s.d.).
+
+\subsection{C6: Approximate exploitability}
+We freeze the learned population and ask how much one household gains by deviating. (a)~\textbf{DP best response:}
+B1's household solver is run at the learned economy's long-run prices $(\bar W,\bar r,\bar\nu)$, which is the exact
+best response of a price-taker. If under-saving pushes $\beta R_a\ge1$, no stationary optimum exists, and we use the
+period-0 policy of the 200-period problem (200 backward EGM steps), which is still a valid deviation. (b)~\textbf{PPO best response:} a single deviator, warm-started from the shared actor
+with a fresh critic, is trained for 100 iterations in 128 economies while everyone else plays the frozen policy;
+checkpoints are selected on a validation snapshot. Both deviations are tested in the simulator from a stationary
+snapshot of the learned economy (32 economies), placing the deviator at the 10th, 50th and 90th wealth percentiles
+with median productivity, over 200 periods with common random numbers. Exploitability is the deviator's
+consumption-equivalent gain in \%; any positive value means the learned profile is not a Nash equilibrium.

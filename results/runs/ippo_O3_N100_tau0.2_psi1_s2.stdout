@@ -1,0 +1,29 @@
+[ippo O3 N=100 s2] it    1 t=2s u=-5.933 kappa=0.817 hours=0.476 p=0.480 gini=0.173 J=-103.28 ent=-0.20
+[ippo O3 N=100 s2] it   20 t=38s u=-3.663 kappa=4.108 hours=0.308 p=0.676 gini=0.401 J=-82.61 ent=-1.80
+[ippo O3 N=100 s2] it   40 t=75s u=-3.543 kappa=4.899 hours=0.309 p=0.667 gini=0.460 J=-81.46 ent=-2.25
+[ippo O3 N=100 s2] it   60 t=114s u=-3.409 kappa=5.608 hours=0.307 p=0.703 gini=0.432 J=-80.96 ent=-2.50
+[ippo O3 N=100 s2] it   80 t=151s u=-3.408 kappa=5.600 hours=0.306 p=0.667 gini=0.519 J=-81.00 ent=-2.61
+[ippo O3 N=100 s2] it  100 t=191s u=-3.399 kappa=5.838 hours=0.309 p=0.665 gini=0.512 J=-80.79 ent=-2.73
+[ippo O3 N=100 s2] it  120 t=229s u=-3.349 kappa=5.810 hours=0.310 p=0.674 gini=0.500 J=-80.82 ent=-2.83
+[ippo O3 N=100 s2] it  140 t=266s u=-3.333 kappa=5.927 hours=0.306 p=0.696 gini=0.466 J=-80.76 ent=-2.92
+[ippo O3 N=100 s2] it  160 t=303s u=-3.347 kappa=5.989 hours=0.304 p=0.700 gini=0.454 J=-80.72 ent=-2.97
+[ippo O3 N=100 s2] it  180 t=339s u=-3.328 kappa=5.673 hours=0.312 p=0.686 gini=0.486 J=-80.74 ent=-3.00
+[ippo O3 N=100 s2] it  200 t=376s u=-3.340 kappa=5.765 hours=0.310 p=0.665 gini=0.511 J=-80.74 ent=-3.02
+[ippo O3 N=100 s2] it  220 t=414s u=-3.356 kappa=5.966 hours=0.309 p=0.675 gini=0.494 J=-80.57 ent=-3.04
+[ippo O3 N=100 s2] it  240 t=451s u=-3.325 kappa=5.828 hours=0.305 p=0.670 gini=0.524 J=-80.80 ent=-3.07
+[ippo O3 N=100 s2] it  260 t=487s u=-3.271 kappa=5.966 hours=0.307 p=0.689 gini=0.473 J=-80.61 ent=-3.10
+[ippo O3 N=100 s2] it  280 t=525s u=-3.349 kappa=5.914 hours=0.309 p=0.673 gini=0.504 J=-80.61 ent=-3.10
+[ippo O3 N=100 s2] it  300 t=560s u=-3.317 kappa=5.994 hours=0.308 p=0.684 gini=0.483 J=-80.59 ent=-3.10
+done
+Traceback (most recent call last):
+  File "E:\Downloads\fai_final_project\econ-marl\scripts\evaluate_run.py", line 99, in <module>
+    evaluate(r, a.ppo_br, a.br_iters)
+  File "E:\Downloads\fai_final_project\econ-marl\scripts\evaluate_run.py", line 72, in evaluate
+    br = dp_best_response(cfg, sm["W"], sm["r"], sm["nu"])
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Downloads\fai_final_project\econ-marl\scripts\..\econmarl\metrics.py", line 131, in dp_best_response
+    return solve_household(cfg, W, r, nu)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Downloads\fai_final_project\econ-marl\scripts\..\econmarl\b1_solver.py", line 117, in solve_household
+    raise ValueError(f"after-tax gross return {Ra} violates 0 < beta*Ra < 1")
+ValueError: after-tax gross return 1.0423244419541398 violates 0 < beta*Ra < 1

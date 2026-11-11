@@ -1,0 +1,17 @@
+[mappo O3 N=100 s0] it    1 t=2s u=-6.118 kappa=1.093 hours=0.479 p=0.529 gini=0.232 J=-103.03 ent=-0.18
+[mappo O3 N=100 s0] it   20 t=40s u=-4.046 kappa=2.447 hours=0.359 p=0.660 gini=0.236 J=-89.76 ent=-1.52
+[mappo O3 N=100 s0] it   40 t=78s u=-3.655 kappa=4.638 hours=0.345 p=0.758 gini=0.222 J=-85.96 ent=-2.05
+[mappo O3 N=100 s0] it   60 t=116s u=-3.529 kappa=5.853 hours=0.342 p=0.788 gini=0.228 J=-85.01 ent=-2.31
+[mappo O3 N=100 s0] it   80 t=155s u=-3.479 kappa=5.923 hours=0.340 p=0.787 gini=0.235 J=-84.53 ent=-2.45
+[mappo O3 N=100 s0] it  100 t=195s u=-3.438 kappa=6.559 hours=0.341 p=0.798 gini=0.241 J=-84.07 ent=-2.56
+[mappo O3 N=100 s0] it  120 t=235s u=-3.434 kappa=6.717 hours=0.330 p=0.800 gini=0.242 J=-83.94 ent=-2.65
+[mappo O3 N=100 s0] it  140 t=275s u=-3.406 kappa=6.828 hours=0.331 p=0.802 gini=0.243 J=-83.79 ent=-2.72
+[mappo O3 N=100 s0] it  160 t=315s u=-3.383 kappa=6.978 hours=0.332 p=0.804 gini=0.245 J=-83.66 ent=-2.78
+[mappo O3 N=100 s0] it  180 t=355s u=-3.385 kappa=6.874 hours=0.335 p=0.803 gini=0.242 J=-83.58 ent=-2.80
+[mappo O3 N=100 s0] it  200 t=394s u=-3.363 kappa=6.876 hours=0.339 p=0.801 gini=0.252 J=-83.50 ent=-2.84
+[mappo O3 N=100 s0] it  220 t=434s u=-3.348 kappa=7.125 hours=0.335 p=0.807 gini=0.244 J=-83.40 ent=-2.89
+[mappo O3 N=100 s0] it  240 t=474s u=-3.357 kappa=6.882 hours=0.337 p=0.801 gini=0.253 J=-83.39 ent=-2.89
+[mappo O3 N=100 s0] it  260 t=519s u=-3.379 kappa=6.984 hours=0.336 p=0.801 gini=0.258 J=-83.32 ent=-2.89
+[mappo O3 N=100 s0] it  280 t=564s u=-3.360 kappa=7.209 hours=0.334 p=0.805 gini=0.256 J=-83.25 ent=-2.90
+[mappo O3 N=100 s0] it  300 t=589s u=-3.355 kappa=7.143 hours=0.334 p=0.804 gini=0.256 J=-83.26 ent=-2.91
+done

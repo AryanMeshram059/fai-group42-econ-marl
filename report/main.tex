@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage{arxiv}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+\newtheorem{definition}{Definition}
+\newtheorem{hypothesis}{Hypothesis}
+
+\title{Learning to Work and Save in a Shared Economy:\\
+Decentralized Multi-Agent Reinforcement Learning\\
+versus the Known-Model Aiyagari Equilibrium}
+
+\author{%
+\textbf{Aryan Meshram} (24110054)\quad
+\textbf{Chaitanya Sharma} (23110072)\\
+\textbf{Pratik Kumar Dhaker} (24110277)\quad
+\textbf{Saksham Chourasia} (24110312)}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+\input{sections/intro}
+\input{sections/prelim}
+\input{sections/method}
+\input{sections/results}
+\input{sections/conclusion}
+\input{sections/contribution}
+
+\bibliographystyle{unsrt}
+\begin{thebibliography}{99}\small\setlength{\itemsep}{0pt}
+\bibitem{taxai} Q.~Mi, S.~Xia, Y.~Song, H.~Zhang, S.~Zhu, and J.~Wang. TaxAI: A dynamic economic simulator and benchmark for multi-agent reinforcement learning. In \emph{Proc. AAMAS}, 1390--1398, 2024.
+\bibitem{aiyagari} S.~R.~Aiyagari. Uninsured idiosyncratic risk and aggregate saving. \emph{Quarterly Journal of Economics}, 109(3):659--684, 1994.
+\bibitem{huggett} M.~Huggett. The risk-free rate in heterogeneous-agent incomplete-insurance economies. \emph{J. Economic Dynamics and Control}, 17(5--6):953--969, 1993.
+\bibitem{hsv} J.~Heathcote, K.~Storesletten, and G.~L.~Violante. Optimal tax progressivity: An analytical framework. \emph{Quarterly Journal of Economics}, 132(4):1693--1754, 2017.
+\bibitem{xu} R.~Xu, Y.~Min, T.~Wang, T.~Wang, M.~I.~Jordan, and Z.~Yang. Finding regularized competitive equilibria of heterogeneous agent macroeconomic models via reinforcement learning. In \emph{Proc. AISTATS}, PMLR 206, 2023.
+\bibitem{lasry} J.-M.~Lasry and P.-L.~Lions. Mean field games. \emph{Japanese Journal of Mathematics}, 2(1):229--260, 2007.
+\bibitem{light} B.~Light and G.~Y.~Weintraub. Mean field equilibrium: Uniqueness, existence, and comparative statics. \emph{Operations Research}, 70(1):585--605, 2022.
+\bibitem{aiecon} S.~Zheng et al. The AI Economist: Taxation policy design via two-level deep multiagent reinforcement learning. \emph{Science Advances}, 8(18), 2022.
+\bibitem{curry} M.~Curry, A.~Trott, S.~Phade, Y.~Bai, and S.~Zheng. Finding general equilibria in many-agent economic simulations using deep reinforcement learning. arXiv:2201.01163, 2022.
+\bibitem{mappo} C.~Yu et al. The surprising effectiveness of PPO in cooperative multi-agent games. In \emph{NeurIPS}, 35, 2022.
+\bibitem{ippo} C.~Schroeder de Witt et al. Is independent learning all you need in the StarCraft multi-agent challenge? arXiv:2011.09533, 2020.
+\bibitem{ppo} J.~Schulman, F.~Wolski, P.~Dhariwal, A.~Radford, and O.~Klimov. Proximal policy optimization algorithms. arXiv:1707.06347, 2017.
+\bibitem{rouwen} K.~A.~Kopecky and R.~M.~H.~Suen. Finite state Markov-chain approximations to highly persistent processes. \emph{Review of Economic Dynamics}, 13(3):701--714, 2010.
+\bibitem{egm} C.~D.~Carroll. The method of endogenous gridpoints for solving dynamic stochastic optimization problems. \emph{Economics Letters}, 91(3):312--320, 2006.
+\bibitem{young} E.~R.~Young. Solving the incomplete markets model with aggregate uncertainty using the Krusell--Smith algorithm and non-stochastic simulations. \emph{J. Economic Dynamics and Control}, 34(1):36--41, 2010.
+\bibitem{gae} J.~Schulman, P.~Moritz, S.~Levine, M.~Jordan, and P.~Abbeel. High-dimensional continuous control using generalized advantage estimation. In \emph{ICLR}, 2016.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,15 @@
+tau=0.0 psi=1.0: kappa*=8.7131 r*=0.0301 nu*=0.0000 hours=0.3333 K=2.9531 gini=0.549 | sim kappa=8.7449 [6s]
+tau=0.1 psi=0.0: kappa*=8.1408 r*=0.0341 nu*=0.0000 hours=0.3376 K=2.7975 gini=0.542 | sim kappa=8.1719 [12s]
+tau=0.1 psi=1.0: kappa*=8.0149 r*=0.0350 nu*=0.0537 hours=0.3207 K=2.6324 gini=0.554 | sim kappa=8.0490 [454s]
+tau=0.2 psi=0.0: kappa*=7.5060 r*=0.0391 nu*=0.0000 hours=0.3424 K=2.6201 gini=0.534 | sim kappa=7.5365 [457s]
+tau=0.2 psi=1.0: kappa*=7.2691 r*=0.0411 nu*=0.1019 hours=0.3075 K=2.3063 gini=0.561 | sim kappa=7.3087 [714s]
+tau=0.3 psi=0.0: kappa*=6.8000 r*=0.0456 nu*=0.0000 hours=0.3482 K=2.4170 gini=0.526 | sim kappa=6.8298 [718s]
+tau=0.3 psi=1.0: kappa*=6.4715 r*=0.0490 nu*=0.1438 hours=0.2936 K=1.9758 gini=0.567 | sim kappa=6.5248 [1174s]
+B1-sim N=10: kappa=8.5101 (sd across envs 1.2202)
+B1-sim N=30: kappa=8.2417 (sd across envs 0.4935)
+B1-sim N=100: kappa=8.7449 (sd across envs 0.1549)
+B1-sim N=300: kappa=8.7361 (sd across envs 0.1858)
+B1-sim N=1000: kappa=8.7600 (sd across envs 0.0972)
+B2: {'p': 0.83, 'h': 0.35, 'J': -84.16360757592577} welfare loss vs B1 13.53% Random loss 3583.29%
+B1 DP-BR gain -0.008%, B2 DP-BR gain 3.321%
+done in 1198s

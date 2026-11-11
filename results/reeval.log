@@ -1,0 +1,7 @@
+ippo_O3_N300_tau0_psi1_s2: kappa 7.087 (B1 8.713, B1-sim 8.736) hours 0.337 gini 0.445/0.546 welfare loss 2.83% p_gap 0.071 h_gap 0.020 DP-BR gain 1.51%
+ippo_O0_N100_tau0_psi1_s0: kappa 7.129 (B1 8.713, B1-sim 8.745) hours 0.336 gini 0.498/0.545 welfare loss 1.20% p_gap 0.038 h_gap 0.011 DP-BR gain 0.76%
+ippo_O0_N100_tau0_psi1_s1: kappa 7.103 (B1 8.713, B1-sim 8.745) hours 0.338 gini 0.475/0.545 welfare loss 1.30% p_gap 0.053 h_gap 0.012 DP-BR gain 0.85%
+ippo_O0_N100_tau0_psi1_s2: kappa 7.105 (B1 8.713, B1-sim 8.745) hours 0.336 gini 0.491/0.545 welfare loss 1.13% p_gap 0.042 h_gap 0.013 DP-BR gain 0.83%
+ippo_O3_N100_tau0.2_psi0_s2: kappa 6.205 (B1 7.506, B1-sim 7.536) hours 0.343 gini 0.482/0.531 welfare loss 1.73% p_gap 0.027 h_gap 0.012 DP-BR gain 0.51%
+ippo_O3_N100_tau0.2_psi1_s0: kappa 6.181 (B1 7.269, B1-sim 7.309) hours 0.308 gini 0.481/0.556 welfare loss 1.95% p_gap 0.046 h_gap 0.010 DP-BR gain 0.47%
+ippo_O3_N100_tau0.2_psi1_s2: kappa 6.138 (B1 7.269, B1-sim 7.309) hours 0.308 gini 0.479/0.556 welfare loss 1.94% p_gap 0.042 h_gap 0.009 DP-BR gain 0.52%

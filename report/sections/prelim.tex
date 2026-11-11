@@ -1,0 +1,48 @@
+\section{Preliminaries and Problem Formulation}
+Let $\mathcal N=\{1,\dots,N\}$ index households and $t=0,1,\dots$ periods. Household $i$ has assets $a_i^t\ge0$,
+productivity $e_i^t>0$, saving ratio $p_i^t\in[p_{\min},p_{\max}]\subset(0,1)$ and hours
+$h_i^t=h_{\min}+(h_{\max}-h_{\min})\hat h_i^t$, $\hat h_i^t\in[0,1]$. Aggregates are capital $K_t$, effective labour
+$L_t$, output $Y_t$ and $\kappa_t=K_t/L_t$; prices are $W_t,R_t$ and $r_t=R_t-\delta$.
+
+\begin{definition}[Markov game]
+$(\mathcal N,\mathcal S,\{\mathcal O_i\},\{\mathcal A_i\},P,\{R_i\},\beta)$ with state space, observations, actions,
+transition kernel, rewards and discount factor; it is general-sum when rewards need not sum to a constant.
+\end{definition}
+\begin{definition}[Competitive prices]
+With $Y=K^\alpha L^{1-\alpha}$: $W=(1-\alpha)\kappa^\alpha$, $R=\alpha\kappa^{\alpha-1}$, $\kappa=K/L$.
+\end{definition}
+\begin{definition}[HSV tax~\cite{hsv}]
+$\mathcal T(x)=x-(1-\tau)x^{1-\xi}/(1-\xi)$; $\xi=0$ gives the proportional tax $\tau x$ (used in all experiments).
+\end{definition}
+
+\textbf{Dynamics.} $\log e_i^{t+1}=\rho_e\log e_i^t+\sigma_e u_i^{t+1}$, discretized with a 7-state Rouwenhorst
+chain~\cite{rouwen} that is used \emph{both} by the simulator and by B1, so B1 is the exact equilibrium of the
+simulated economy (levels normalised to $\mathbb E[e]=1$). Households observe $o_i^t$ and simultaneously choose
+$(p_i^t,\hat h_i^t)$. Then
+\begin{gather*}
+L_t=\max\big(\textstyle\sum_i e_i^th_i^t,\,L_{\min}\big),\quad \kappa_t=\mathrm{clip}(K_t/L_t,\kappa_{\min},\kappa_{\max}),\quad
+K_t=\textstyle\sum_i a_i^t,\\
+y_i^t=W_te_i^th_i^t+r_ta_i^t,\quad S_t=\textstyle\sum_i[\mathcal T(y_i^t)+\mathcal T^a(a_i^t)],\quad \nu_t=\psi S_t/N,\quad G_t=(1-\psi)S_t,\\
+m_i^t=a_i^t+y_i^t-\mathcal T(y_i^t)-\mathcal T^a(a_i^t)+\nu_t,\quad a_i^{t+1}=p_i^tm_i^t,\quad c_i^t=(1-p_i^t)m_i^t,\\
+R_i^t=u(c_i^t,h_i^t)=\frac{(c_i^t)^{1-\theta}}{1-\theta}-\chi\frac{(h_i^t)^{1+\varphi}}{1+\varphi}.
+\end{gather*}
+Because production is constant-returns, $W_tL_t+R_tK_t=Y_t$, and summing budgets gives
+$Y_t=C_t+K_{t+1}-(1-\delta)K_t+G_t$ whenever no safeguard binds. Every household maximizes
+$J_i=\mathbb E\sum_t\beta^tR_i^t$; with one shared policy $\pi_\vartheta$ the learning objective is
+$\bar J(\vartheta)=\frac1N\sum_iJ_i(\pi_\vartheta,\dots,\pi_\vartheta)$.
+
+\textbf{Benchmark B1.} Given $(\kappa,\nu)$ a price-taking household solves
+$V(a,e)=\max_{a'\ge0,\,h\in[h_{\min},h_{\max}]}\{u(m(a,e,h)-a',h)+\beta\mathbb E[V(a',e')\mid e]\}$. With stationary
+distribution $\mu_{\kappa,\nu}$, $K^s=\int a\,d\mu$, $L^s=\int eh^\star d\mu$, and $(\kappa^\star,\nu^\star)$ solves
+$K^s/L^s=\kappa^\star$, $\nu^\star=\psi\int[\mathcal T(y)+\mathcal T^a(a)]d\mu$. As $N\to\infty$ an individual's
+price impact vanishes, which is why B1 is the natural mean-field reference~\cite{lasry,xu}.
+
+\textbf{Observation levels.} O0: $(a_i,e_i)$; O1: O0 + lagged prices $(W_{t-1},r_{t-1})$; O2: O1 + $K_t/N$, $L_{t-1}/N$;
+O3: O2 + TaxAI-style wealth-group statistics (mean wealth, lagged income and productivity of the top-10\% and
+bottom-50\%)~\cite{taxai}.
+
+\textbf{Hypotheses.}
+\textbf{H1} (equilibrium recovery): MARL approaches B1 in aggregates but may differ in the tails of the wealth distribution.
+\textbf{H2} (population size): price impact is $O(1/N)$, so the gap behaves as $\Delta(N)\approx cN^{-1}+\Delta_0$ with a learning-noise floor $\Delta_0$.
+\textbf{H3} (information): moving from O0 to O2 substantially reduces gaps; O3 adds less.
+\textbf{H4} (tax response): MARL and B1 predict the same signs of labour and capital responses to the net-of-tax rate, possibly with different magnitudes.

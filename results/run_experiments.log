@@ -1,0 +1,100 @@
+49 runs to do
+[     0s] start E2 ippo_O3_N1000_tau0_psi1_s0
+[     0s] start E2 ippo_O3_N1000_tau0_psi1_s1
+[     0s] start E2 ippo_O3_N1000_tau0_psi1_s2
+[     0s] start E2 ippo_O3_N300_tau0_psi1_s0
+[     0s] start E2 ippo_O3_N300_tau0_psi1_s1
+[   590s] finished E2 ippo_O3_N300_tau0_psi1_s0 rc=0 (44 queued, 4 running)
+[   590s] finished E2 ippo_O3_N300_tau0_psi1_s1 rc=0 (44 queued, 3 running)
+[   590s] start E2 ippo_O3_N300_tau0_psi1_s2
+[   590s] start E1 ippo_O3_N100_tau0_psi1_s0
+[  1120s] finished E2 ippo_O3_N300_tau0_psi1_s2 rc=1 (42 queued, 4 running)
+[  1120s] start E1 mappo_O3_N100_tau0_psi1_s0
+[  1395s] finished E2 ippo_O3_N1000_tau0_psi1_s0 rc=0 (41 queued, 4 running)
+[  1395s] finished E2 ippo_O3_N1000_tau0_psi1_s1 rc=0 (41 queued, 3 running)
+[  1395s] finished E2 ippo_O3_N1000_tau0_psi1_s2 rc=0 (41 queued, 2 running)
+[  1395s] start E1 ippo_O3_N100_tau0_psi1_s1
+[  1395s] start E1 mappo_O3_N100_tau0_psi1_s1
+[  1395s] start E1 ippo_O3_N100_tau0_psi1_s2
+[  1620s] finished E1 ippo_O3_N100_tau0_psi1_s0 rc=0 (38 queued, 4 running)
+[  1620s] start E1 mappo_O3_N100_tau0_psi1_s2
+[  2190s] finished E1 mappo_O3_N100_tau0_psi1_s0 rc=0 (37 queued, 4 running)
+[  2190s] start E1 ippo_O3_N100_tau0_psi1_s3
+[  2420s] finished E1 ippo_O3_N100_tau0_psi1_s1 rc=0 (36 queued, 4 running)
+[  2420s] finished E1 ippo_O3_N100_tau0_psi1_s2 rc=0 (36 queued, 3 running)
+[  2420s] start E1 mappo_O3_N100_tau0_psi1_s3
+[  2420s] start E1 ippo_O3_N100_tau0_psi1_s4
+[  2455s] finished E1 mappo_O3_N100_tau0_psi1_s1 rc=0 (34 queued, 4 running)
+[  2455s] start E1 mappo_O3_N100_tau0_psi1_s4
+[  2681s] finished E1 mappo_O3_N100_tau0_psi1_s2 rc=0 (33 queued, 4 running)
+[  2681s] start E3 ippo_O0_N100_tau0_psi1_s0
+[  3196s] finished E1 ippo_O3_N100_tau0_psi1_s3 rc=0 (32 queued, 4 running)
+[  3196s] start E3 ippo_O0_N100_tau0_psi1_s1
+[  3241s] finished E3 ippo_O0_N100_tau0_psi1_s0 rc=1 (31 queued, 4 running)
+[  3241s] start E3 ippo_O0_N100_tau0_psi1_s2
+[  3416s] finished E1 ippo_O3_N100_tau0_psi1_s4 rc=0 (30 queued, 4 running)
+[  3416s] start E3 ippo_O1_N100_tau0_psi1_s0
+[  3451s] finished E1 mappo_O3_N100_tau0_psi1_s3 rc=0 (29 queued, 4 running)
+[  3451s] start E3 ippo_O1_N100_tau0_psi1_s1
+[  3491s] finished E1 mappo_O3_N100_tau0_psi1_s4 rc=0 (28 queued, 4 running)
+[  3491s] start E3 ippo_O1_N100_tau0_psi1_s2
+[  3746s] finished E3 ippo_O0_N100_tau0_psi1_s1 rc=1 (27 queued, 4 running)
+[  3746s] start E3 ippo_O2_N100_tau0_psi1_s0
+[  3791s] finished E3 ippo_O0_N100_tau0_psi1_s2 rc=1 (26 queued, 4 running)
+[  3791s] start E3 ippo_O2_N100_tau0_psi1_s1
+[  3966s] finished E3 ippo_O1_N100_tau0_psi1_s0 rc=0 (25 queued, 4 running)
+[  3966s] start E3 ippo_O2_N100_tau0_psi1_s2
+[  3996s] finished E3 ippo_O1_N100_tau0_psi1_s1 rc=0 (24 queued, 4 running)
+[  3996s] start E4 ippo_O3_N100_tau0.1_psi0_s0
+[  4036s] finished E3 ippo_O1_N100_tau0_psi1_s2 rc=0 (23 queued, 4 running)
+[  4036s] start E4 ippo_O3_N100_tau0.1_psi0_s1
+[  4306s] finished E3 ippo_O2_N100_tau0_psi1_s0 rc=0 (22 queued, 4 running)
+[  4306s] start E4 ippo_O3_N100_tau0.1_psi0_s2
+[  4351s] finished E3 ippo_O2_N100_tau0_psi1_s1 rc=0 (21 queued, 4 running)
+[  4351s] start E4 ippo_O3_N100_tau0.1_psi1_s0
+[  4521s] finished E3 ippo_O2_N100_tau0_psi1_s2 rc=0 (20 queued, 4 running)
+[  4521s] start E4 ippo_O3_N100_tau0.1_psi1_s1
+[  4586s] finished E4 ippo_O3_N100_tau0.1_psi0_s0 rc=0 (19 queued, 4 running)
+[  4586s] start E4 ippo_O3_N100_tau0.1_psi1_s2
+[  4626s] finished E4 ippo_O3_N100_tau0.1_psi0_s1 rc=0 (18 queued, 4 running)
+[  4626s] start E4 ippo_O3_N100_tau0.2_psi0_s0
+[  4896s] finished E4 ippo_O3_N100_tau0.1_psi0_s2 rc=0 (17 queued, 4 running)
+[  4896s] start E4 ippo_O3_N100_tau0.2_psi0_s1
+[  4946s] finished E4 ippo_O3_N100_tau0.1_psi1_s0 rc=0 (16 queued, 4 running)
+[  4946s] start E4 ippo_O3_N100_tau0.2_psi0_s2
+[  5126s] finished E4 ippo_O3_N100_tau0.1_psi1_s1 rc=0 (15 queued, 4 running)
+[  5126s] start E4 ippo_O3_N100_tau0.2_psi1_s0
+[  5196s] finished E4 ippo_O3_N100_tau0.1_psi1_s2 rc=0 (14 queued, 4 running)
+[  5196s] start E4 ippo_O3_N100_tau0.2_psi1_s1
+[  5231s] finished E4 ippo_O3_N100_tau0.2_psi0_s0 rc=0 (13 queued, 4 running)
+[  5231s] start E4 ippo_O3_N100_tau0.2_psi1_s2
+[  5501s] finished E4 ippo_O3_N100_tau0.2_psi0_s1 rc=0 (12 queued, 4 running)
+[  5501s] start E4 ippo_O3_N100_tau0.3_psi0_s0
+[  5546s] finished E4 ippo_O3_N100_tau0.2_psi0_s2 rc=1 (11 queued, 4 running)
+[  5546s] start E4 ippo_O3_N100_tau0.3_psi0_s1
+[  5711s] finished E4 ippo_O3_N100_tau0.2_psi1_s0 rc=1 (10 queued, 4 running)
+[  5711s] start E4 ippo_O3_N100_tau0.3_psi0_s2
+[  5786s] finished E4 ippo_O3_N100_tau0.2_psi1_s1 rc=0 (9 queued, 4 running)
+[  5786s] start E4 ippo_O3_N100_tau0.3_psi1_s0
+[  5816s] finished E4 ippo_O3_N100_tau0.2_psi1_s2 rc=1 (8 queued, 4 running)
+[  5816s] start E4 ippo_O3_N100_tau0.3_psi1_s1
+[  6141s] finished E4 ippo_O3_N100_tau0.3_psi0_s0 rc=0 (7 queued, 4 running)
+[  6141s] start E4 ippo_O3_N100_tau0.3_psi1_s2
+[  6201s] finished E4 ippo_O3_N100_tau0.3_psi0_s1 rc=0 (6 queued, 4 running)
+[  6201s] start E2 ippo_O3_N30_tau0_psi1_s0
+[  6381s] finished E4 ippo_O3_N100_tau0.3_psi0_s2 rc=0 (5 queued, 4 running)
+[  6381s] start E2 ippo_O3_N30_tau0_psi1_s1
+[  6461s] finished E4 ippo_O3_N100_tau0.3_psi1_s0 rc=0 (4 queued, 4 running)
+[  6461s] start E2 ippo_O3_N30_tau0_psi1_s2
+[  6491s] finished E4 ippo_O3_N100_tau0.3_psi1_s1 rc=0 (3 queued, 4 running)
+[  6491s] start E2 ippo_O3_N10_tau0_psi1_s0
+[  6766s] finished E4 ippo_O3_N100_tau0.3_psi1_s2 rc=0 (2 queued, 4 running)
+[  6766s] start E2 ippo_O3_N10_tau0_psi1_s1
+[  6801s] finished E2 ippo_O3_N30_tau0_psi1_s0 rc=0 (1 queued, 4 running)
+[  6801s] start E2 ippo_O3_N10_tau0_psi1_s2
+[  6956s] finished E2 ippo_O3_N30_tau0_psi1_s1 rc=0 (0 queued, 4 running)
+[  7026s] finished E2 ippo_O3_N30_tau0_psi1_s2 rc=0 (0 queued, 3 running)
+[  7051s] finished E2 ippo_O3_N10_tau0_psi1_s0 rc=0 (0 queued, 2 running)
+[  7212s] finished E2 ippo_O3_N10_tau0_psi1_s1 rc=0 (0 queued, 1 running)
+[  7232s] finished E2 ippo_O3_N10_tau0_psi1_s2 rc=0 (0 queued, 0 running)
+all done

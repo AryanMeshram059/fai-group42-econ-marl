@@ -1,0 +1,28 @@
+\section{Introduction}
+An economy is a large multi-agent system. Households choose how much to work and save, while aggregate choices
+determine capital, labour, wages and returns; taxes and redistribution further change incentives. Traditional
+macroeconomic models assume agents know the model and solve for equilibrium, whereas learning-based economic
+simulators let agents adapt through interaction.
+
+In the Bewley--Huggett--Aiyagari family~\cite{aiyagari,huggett}, households face idiosyncratic income risk, save in a
+single asset and take prices as given; equilibrium is obtained through household dynamic programming and a
+market-clearing fixed point. In the infinite-population limit this is a mean-field game~\cite{lasry,light}, and
+reinforcement learning has been used to find regularized mean-field equilibria~\cite{xu}. Conversely, the AI
+Economist~\cite{aiecon} and TaxAI~\cite{taxai} place learning agents inside economic simulators, and Curry et
+al.~\cite{curry} study general equilibrium with deep RL. TaxAI in particular benchmarks MARL households and
+governments in a Bewley--Aiyagari simulator with up to $10^4$ households, but it has no exact equilibrium to compare
+the learned behaviour against.
+
+Our project connects the two views. We build one finite-$N$ economy, solve it with a known-model benchmark (B1), train
+decentralized MARL households in the \emph{same} environment, and measure gaps in aggregates, individual policies,
+welfare, inequality and exploitability. The central question is:
+\emph{how close does the learned economy get to the known-model competitive equilibrium, and how does this depend on
+$N$, on the information available to households, and on the tax regime?}
+
+\textbf{Contributions.} (i) An exactly-accounted, vectorized simulator whose resource constraint is verified to
+$10^{-9}$ by an automated test; (ii) a dynamic-programming ground truth (EGM, histogram distribution, Brent fixed
+point), cross-validated against value-function iteration; (iii) shared-policy IPPO and MAPPO households trained under
+four observation levels, five population sizes and seven tax regimes (49 training runs); (iv) aggregate, policy,
+consumption-equivalent welfare, inequality and two exploitability metrics (an exact DP best response and a PPO best
+response); (v) quantitative tests of four hypotheses H1--H4. All numbers below are produced by the code in our
+repository (Section~\ref{sec:repo}).

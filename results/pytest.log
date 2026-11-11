@@ -1,0 +1,30 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\LENOVO\AppData\Local\Programs\Python\Python311\python.exe
+rootdir: E:\Downloads\fai_final_project\econ-marl
+plugins: anyio-4.14.2, locust-2.43.4
+collecting ... collected 16 items
+
+tests/test_accounting.py::test_resource_constraint[10-0.0-0.0-1.0-0.0] PASSED [  6%]
+tests/test_accounting.py::test_resource_constraint[10-0.2-0.0-1.0-0.0] PASSED [ 12%]
+tests/test_accounting.py::test_resource_constraint[10-0.3-0.01-0.0-0.0] PASSED [ 18%]
+tests/test_accounting.py::test_resource_constraint[10-0.25-0.02-0.5-0.1] PASSED [ 25%]
+tests/test_accounting.py::test_resource_constraint[100-0.0-0.0-1.0-0.0] PASSED [ 31%]
+tests/test_accounting.py::test_resource_constraint[100-0.2-0.0-1.0-0.0] PASSED [ 37%]
+tests/test_accounting.py::test_resource_constraint[100-0.3-0.01-0.0-0.0] PASSED [ 43%]
+tests/test_accounting.py::test_resource_constraint[100-0.25-0.02-0.5-0.1] PASSED [ 50%]
+tests/test_accounting.py::test_budget_and_nonnegativity PASSED           [ 56%]
+tests/test_accounting.py::test_competitive_prices PASSED                 [ 62%]
+tests/test_b1.py::test_market_clearing PASSED                            [ 68%]
+tests/test_b1.py::test_interest_rate_below_time_preference PASSED        [ 75%]
+tests/test_b1.py::test_euler_errors PASSED                               [ 81%]
+tests/test_b1.py::test_distribution_is_probability PASSED                [ 87%]
+tests/test_b1.py::test_egm_matches_vfi PASSED                            [ 93%]
+tests/test_b1.py::test_government_budget_with_tax PASSED                 [100%]
+
+============================== warnings summary ===============================
+tests/test_b1.py::test_egm_matches_vfi
+  E:\Downloads\fai_final_project\econ-marl\tests\..\econmarl\b1_solver.py:316: RuntimeWarning: overflow encountered in power
+    f = np.where(cc > 0, cfg.chi * mid ** cfg.phi - np.maximum(cc, 1e-300) ** (-cfg.theta) * WE, -1.0)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 16 passed, 1 warning in 255.68s (0:04:15) ==================

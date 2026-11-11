@@ -1,0 +1,18 @@
+[ippo O3 N=30 s0] it    1 t=2s u=-6.114 kappa=1.109 hours=0.481 p=0.531 gini=0.225 J=-103.67 ent=-0.20
+[ippo O3 N=30 s0] it   20 t=45s u=-3.640 kappa=5.070 hours=0.335 p=0.729 gini=0.362 J=-84.62 ent=-1.87
+[ippo O3 N=30 s0] it   40 t=88s u=-3.474 kappa=6.356 hours=0.330 p=0.760 gini=0.357 J=-83.61 ent=-2.40
+[ippo O3 N=30 s0] it   60 t=128s u=-3.371 kappa=6.939 hours=0.336 p=0.762 gini=0.378 J=-83.16 ent=-2.63
+[ippo O3 N=30 s0] it   80 t=165s u=-3.369 kappa=7.248 hours=0.341 p=0.737 gini=0.438 J=-83.08 ent=-2.73
+[ippo O3 N=30 s0] it  100 t=202s u=-3.358 kappa=6.811 hours=0.339 p=0.737 gini=0.424 J=-83.11 ent=-2.84
+[ippo O3 N=30 s0] it  120 t=240s u=-3.406 kappa=6.944 hours=0.334 p=0.736 gini=0.430 J=-83.04 ent=-2.88
+[ippo O3 N=30 s0] it  140 t=276s u=-3.327 kappa=7.266 hours=0.336 p=0.736 gini=0.451 J=-82.81 ent=-2.97
+[ippo O3 N=30 s0] it  160 t=312s u=-3.338 kappa=7.058 hours=0.334 p=0.752 gini=0.411 J=-82.87 ent=-3.04
+[ippo O3 N=30 s0] it  180 t=350s u=-3.324 kappa=7.283 hours=0.340 p=0.734 gini=0.454 J=-82.86 ent=-3.04
+[ippo O3 N=30 s0] it  200 t=387s u=-3.327 kappa=7.417 hours=0.337 p=0.735 gini=0.457 J=-82.80 ent=-3.09
+[ippo O3 N=30 s0] it  220 t=423s u=-3.300 kappa=7.223 hours=0.336 p=0.723 gini=0.471 J=-82.87 ent=-3.10
+[ippo O3 N=30 s0] it  240 t=460s u=-3.291 kappa=7.587 hours=0.334 p=0.732 gini=0.466 J=-82.66 ent=-3.14
+[ippo O3 N=30 s0] it  260 t=496s u=-3.265 kappa=7.665 hours=0.335 p=0.741 gini=0.449 J=-82.68 ent=-3.16
+[ippo O3 N=30 s0] it  280 t=533s u=-3.324 kappa=7.486 hours=0.335 p=0.752 gini=0.425 J=-82.73 ent=-3.17
+[ippo O3 N=30 s0] it  300 t=568s u=-3.314 kappa=7.360 hours=0.337 p=0.742 gini=0.443 J=-82.76 ent=-3.15
+done
+ippo_O3_N30_tau0_psi1_s0: kappa 7.218 (B1 8.713, B1-sim 8.242) hours 0.336 gini 0.423/0.552 welfare loss 0.87% p_gap 0.052 h_gap 0.017 DP-BR gain 1.11%

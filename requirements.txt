@@ -1,0 +1,6 @@
+# Python 3.11 (tested on 3.11.9, CPU only)
+numpy>=2.0
+scipy>=1.13
+torch>=2.3
+matplotlib>=3.8
+pytest>=8.0
