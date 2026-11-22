@@ -315,6 +315,26 @@ if e4:
     axs[0].legend(frameon=False, fontsize=6)
     fig.tight_layout(); save(fig, "fig_e4_tax")
 
+# ---- B1 equilibria for all tax regimes (benchmark sanity table) and E4 elasticities
+with open("report/tables/b1.tex", "w") as f:
+    f.write("\\begin{tabular}{ccccccccccc}\n\\toprule\n$\\tau$ & $\\psi$ & $\\kappa^\\star$ & $r^\\star$ & $\\nu^\\star$ & "
+            "hours & $K/N$ & Gini & constr. & $\\kappa$ in sim. & Euler err.\\\\\n\\midrule\n")
+    for c in bench["configs"]:
+        t = c["theory"]
+        f.write(f"{c['tau']:.1f} & {c['psi']:.0f} & {c['kappa']:.3f} & {100*c['r']:.2f}\\% & {c['nu']:.4f} & {t['hours']:.4f} & "
+                f"{t['K']:.3f} & {t['gini']:.3f} & {t['frac_constrained']:.3f} & {c['sim100']['kappa']:.3f} & "
+                f"{c['euler_mean_log10']:.2f} ({c['euler_max_log10']:.2f})\\\\\n")
+    f.write("\\bottomrule\n\\end{tabular}\n")
+if el:
+    with open("report/tables/e4_elasticity.tex", "w") as f:
+        f.write("\\begin{tabular}{lcccc}\n\\toprule\nRevenue use & $\\varepsilon_K$ MARL & $\\varepsilon_K$ B1 & "
+                "$\\varepsilon_h$ MARL & $\\varepsilon_h$ B1\\\\\n\\midrule\n")
+        for psi, lab in ((0.0, "wasted ($\\psi=0$)"), (1.0, "rebated ($\\psi=1$)")):
+            if psi in el:
+                d = el[psi]
+                f.write(f"{lab} & {d['K_marl']:.2f} & {d['K_b1']:.2f} & {d['L_marl']:.2f} & {d['L_b1']:.2f}\\\\\n")
+        f.write("\\bottomrule\n\\end{tabular}\n")
+
 fh = [r["run"] if "run" in r else f"{r['algo']}_O{r['obs']}_N{r['N']}_tau{r['tau']:g}_psi{r['psi']:g}_s{r['seed']}"
       for r in runs if r["exploit_dp"].get("finite_horizon")]
 summary["finite_horizon_br_runs"] = sorted(fh)

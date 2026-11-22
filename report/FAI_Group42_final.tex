@@ -1,0 +1,867 @@
+\documentclass{article}
+
+% The proposal used PRIMEarxiv.sty (Overleaf template). If it is not present, fall back to
+% report/arxiv.sty from the repository, a re-creation of the same layout.
+\IfFileExists{PRIMEarxiv.sty}{\usepackage{PRIMEarxiv}}{\usepackage{arxiv}}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+\usepackage{hyperref}
+
+% ---------- shortcuts ----------
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{hypothesis}{Hypothesis}
+
+% ---------- title ----------
+\title{
+Learning to Work and Save in a Shared Economy: \\
+Decentralized Multi-Agent Reinforcement Learning versus the Known-Model Aiyagari Equilibrium
+}
+
+% Leave author empty because we will place a custom author block below the title
+\author{}
+
+\date{\today}
+
+\hypersetup{
+    pdftitle={Learning to Work and Save in a Shared Economy},
+    pdfauthor={Aryan Meshram, Chaitanya Sharma, Pratik Dhaker, Saksham Chourasia},
+    pdfkeywords={
+        multi-agent reinforcement learning,
+        heterogeneous agents,
+        Aiyagari model,
+        mean-field games,
+        taxation
+    },
+}
+
+\begin{document}
+
+\maketitle
+
+\vspace{-4.5em}
+% ---------- custom author block ----------
+\begin{center}
+\setlength{\tabcolsep}{22pt}
+
+\begin{tabular}{cc}
+
+\begin{tabular}{c}
+\textbf{Aryan Meshram}\\
+24110054\\
+{\scriptsize\texttt{aryan.meshram@iitgn.ac.in}}
+\end{tabular}
+&
+\begin{tabular}{c}
+\textbf{Chaitanya Sharma}\\
+23110072\\
+{\scriptsize\texttt{chaitanya.sharma@iitgn.ac.in}}
+\end{tabular}
+\\[1.5em]
+
+\begin{tabular}{c}
+\textbf{Pratik Kumar Dhakar}\\
+24110277\\
+{\scriptsize\texttt{pratik.dhakar@iitgn.ac.in}}
+\end{tabular}
+&
+\begin{tabular}{c}
+\textbf{Saksham Chourasia}\\
+24110312\\
+{\scriptsize\texttt{saksham.chourasia@iitgn.ac.in}}
+\end{tabular}
+
+\end{tabular}
+
+\vspace{0.5em}
+
+\end{center}
+
+\vspace{0.5em}
+
+% ---------- abstract ----------
+\begin{abstract}
+Millions of households decide every year how much to work and how much to save. Their choices add up to the capital and labor supply of an economy, which in turn determines the wages and interest rates that each household faces. We study this feedback loop as a general-sum Markov game in which $N$ households learn labor and saving policies by trial and error, using decentralized multi-agent reinforcement learning (MARL), and compare the outcome with the exact competitive equilibrium of the \emph{same} economy, computed with full knowledge of the model in the spirit of the Aiyagari model (benchmark B1). We build a vectorized simulator whose resource constraint holds to $10^{-9}$, solve B1 by endogenous-grid dynamic programming, a histogram distribution and a Brent market-clearing fixed point, and train shared-policy IPPO and MAPPO households in it (49 training runs over five population sizes, four observation levels and seven tax regimes). Learners match equilibrium hours ($0.334$ vs.\ $0.333$) and lose only $1.3$--$1.4\%$ of consumption-equivalent welfare, against $13.5\%$ for the best constant policy. However, they under-accumulate capital by about $14\%$, produce too little wealth inequality (Gini $0.46$ vs.\ $0.55$), and are not a Nash equilibrium: an exact best response gains $0.40\%$, a gain that a PPO-trained deviator fails to find. The capital gap does not shrink like $1/N$ but sits on a learning floor of about $13\%$; observing prices reduces it, observing aggregates does not. Under income taxes, learners reproduce the signs and roughly the elasticities of the equilibrium capital and labor responses, but not the distributional response.
+\end{abstract}
+
+\providecommand{\keywords}[1]{\par\noindent\textbf{Keywords:} #1}
+\keywords{Multi-agent reinforcement learning, Heterogeneous agent economies, Aiyagari model, Mean-field limit, Taxation, Exploitability}
+
+%==============================================================
+\section{Introduction}
+%==============================================================
+
+\paragraph{Motivation.}
+An economy is a very large multi-agent system. Each household chooses how many hours to work and how much of its wealth to save. No household controls prices, yet the sum of all households' choices does: more total saving means more capital, which raises wages and lowers the return on savings. Governments then tax income and wealth and redistribute part of the revenue, which changes incentives again. Understanding what such an economy looks like when its participants \emph{learn} rather than \emph{know} the rules is important for two reasons. First, real households do not know the pricing rule or the tax code in advance; they adapt from experience. Second, simulators that let learning agents interact are increasingly used to test economic policy, so we need to know when their outcomes can be trusted.
+
+\paragraph{Two views of the same problem.}
+Macroeconomics has a well-developed \emph{known-model} view. In the Bewley--Huggett--Aiyagari family of models \cite{aiyagari1994,huggett1993}, households face uninsurable income risk, save in a single asset, and take prices as given. The equilibrium is computed by dynamic programming and a fixed point on the capital--labor ratio. When the number of households goes to infinity, the economy can also be written as a mean-field game \cite{lasry2007,light2022}, and recent work shows that a reinforcement-learning method can provably converge to a regularized version of this equilibrium \cite{xu2023}. Those results assume a continuum of price-taking agents and a single representative learner.
+
+In parallel, a \emph{learning} view has appeared. The AI Economist \cite{zheng2022} and the TaxAI simulator \cite{mi2024taxai} place learning agents inside economic simulators and study taxation. Such simulators use a finite number of agents that learn simultaneously, so each agent has a small but non-zero effect on prices. However, they rarely compare the learned outcome with an exact known-model solution of the same economy, so it is unclear how much of what learning agents do is a rational response and how much is an artifact of learning, finite population size, or the training horizon.
+
+\paragraph{Our question.}
+We connect the two views. We build a simulator of a heterogeneous-household economy with endogenous prices and a fixed tax system, solve it exactly under full information (benchmark \textbf{B1}), and train $N$ decentralized MARL households in the same environment. We then ask:
+
+\begin{quote}
+\emph{How close does the economy of learning households get to the competitive equilibrium of the known model, and how does the gap depend on (i) the number of households $N$, (ii) the information households observe, and (iii) the tax regime?}
+\end{quote}
+
+This is a multi-agent question in the sense of the course: the equilibrium outcome (with price-taking agents) differs from the outcome when agents are few and strategic, and we can measure the difference between a full-information solution method and a learning method.
+
+\paragraph{Contributions.}
+(i) A vectorized simulator with a precise timing protocol whose aggregate resource constraint is verified to $10^{-9}$ by an automated test; (ii) a dynamic-programming benchmark (endogenous grid method, histogram distribution, Brent fixed point) for the \emph{same} finite-state economy, cross-validated against value-function iteration; (iii) shared-policy IPPO and MAPPO households trained under five population sizes, four observation levels and seven tax regimes (49 runs); (iv) aggregate, policy, consumption-equivalent welfare and inequality gaps, plus two exploitability measures (an exact dynamic-programming best response and a PPO-trained best response); and (v) quantified answers to the four hypotheses of Section~\ref{sec:hyp}, including negative ones. Every number in Section~\ref{sec:results} is produced by the code in our repository (Section~\ref{sec:repo}).
+
+\paragraph{Related work in brief.}
+TaxAI \cite{mi2024taxai} provides the household--firm--government simulator that inspired our environment; we redefine the timing, budget and reward so that the accounting is exact and a benchmark exists. Xu et al.\ \cite{xu2023} give convergence guarantees for a mean-field learning algorithm in the continuum limit; we study the finite-$N$ regime with online MARL, where those guarantees do not apply. Curry et al.\ \cite{curry2022} use deep RL to find general equilibria in many-agent economies; we add an exact dynamic-programming ground truth and an exploitability metric. For the learning algorithms we use PPO-based methods \cite{schulman2017,yu2022,dewitt2020}.
+
+%==============================================================
+\section{Preliminaries}
+%==============================================================
+
+\subsection{Notation}
+
+\begin{table}[h]
+\centering
+\caption{Main notation.}
+\label{tab:notation}
+\small
+\begin{tabular}{@{}p{3.2cm}p{11cm}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+$\mathcal N=\{1,\dots,N\}$, $t=0,\dots,T-1$ & households and periods (one period $=$ one year) \\
+$a_i^t\ge 0$ & assets of household $i$ at the start of period $t$ (no borrowing) \\
+$e_i^t>0$ & labor productivity \\
+$p_i^t\in[p_{\min},p_{\max}]\subset(0,1)$ & saving ratio (fraction of cash-on-hand saved) \\
+$\hat h_i^t\in[0,1]$, $h_i^t$ & hours action and actual hours, $h=h_{\min}+(h_{\max}-h_{\min})\hat h$ \\
+$y_i^t$, $m_i^t$, $c_i^t$ & pre-tax income, cash-on-hand, consumption \\
+$K_t$, $L_t$, $Y_t$ & aggregate capital, effective labor, output \\
+$\kappa_t=K_t/L_t$ & capital--labor ratio \\
+$W_t$, $R_t$, $r_t=R_t-\delta$ & wage, gross rental rate, net return on assets \\
+$\mathcal T$, $\mathcal T^a$ & income-tax and wealth-tax functions \\
+$\psi\in[0,1]$, $\nu_t$, $G_t$ & rebate share, lump-sum rebate per household, government spending \\
+$\alpha,\delta,\beta$ & capital share, depreciation rate, discount factor \\
+$\theta,\varphi,\chi$ & CRRA coefficient, inverse Frisch elasticity, labor-disutility weight \\
+$o_i^t$, $\pi_\vartheta$ & observation of household $i$, shared policy with parameters $\vartheta$ \\
+$\mu$ & stationary distribution of $(a,e)$ in the benchmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Background definitions}
+
+\begin{definition}[Markov game]
+A (partially observable) Markov game is a tuple $\big(\mathcal N,\mathcal S,\{\mathcal O_i\},\{\mathcal A_i\},P,\{R_i\},\beta\big)$ with state space $\mathcal S$, observation spaces $\mathcal O_i$, action spaces $\mathcal A_i$, transition kernel $P(s'\mid s,\mathbf u)$ for the joint action $\mathbf u$, reward functions $R_i$ and discount $\beta\in(0,1)$. It is \emph{general-sum} if the $R_i$ are not required to sum to a constant.
+\end{definition}
+
+\begin{definition}[Cobb--Douglas firm and prices]
+Given aggregate capital $K$ and effective labor $L$, output is $Y=K^{\alpha}L^{1-\alpha}$. A profit-maximizing competitive firm pays factors their marginal products: $W=(1-\alpha)\kappa^{\alpha}$ and $R=\alpha\kappa^{\alpha-1}$ with $\kappa=K/L$.
+\end{definition}
+
+\begin{definition}[HSV tax schedule \cite{heathcote2017}]
+For a reference-scaled amount $x$, the tax paid is
+$\mathcal T(x)=x-(1-\tau)\dfrac{x^{1-\xi}}{1-\xi}$,
+where $\tau$ is the level parameter and $\xi\ge0$ the progressivity parameter. For $\xi=0$ it reduces to the proportional tax $\tau x$.
+\end{definition}
+
+\begin{definition}[Aiyagari-type recursive competitive equilibrium]
+A tuple $(\kappa^\star,\nu^\star,\pi^\star,\mu^\star)$ is a stationary recursive competitive equilibrium if (a) $\pi^\star$ solves each household's dynamic program given prices from $\kappa^\star$ and rebate $\nu^\star$, (b) $\mu^\star$ is the stationary distribution of $(a,e)$ under $\pi^\star$, (c) capital and labor markets clear, $\int a\,d\mu^\star/\int e\,h\,d\mu^\star=\kappa^\star$, and (d) the government budget is balanced with rebate $\nu^\star$.
+\end{definition}
+
+\begin{definition}[Mean-field limit and QR-MFE \cite{lasry2007,xu2023}]
+As $N\to\infty$, a single household's effect on the aggregate vanishes and the economy is described by a representative household facing a mean-field term $z$ (here, prices). A quantal-response mean-field equilibrium is a pair $(\pi^\star,z^\star)$ in which $\pi^\star$ is the entropy-regularized optimal policy under $z^\star$, and $z^\star$ is the term generated by $\pi^\star$ through the firm's aggregation and production maps.
+\end{definition}
+
+\begin{definition}[IPPO and MAPPO \cite{dewitt2020,yu2022}]
+Both use proximal policy optimization \cite{schulman2017} with a shared actor $\pi_\vartheta(u\mid o)$. IPPO uses a critic $V(o_i)$ that sees only the agent's own observation. MAPPO uses a centralized critic $V(z_t,o_i)$ with a permutation-invariant global summary $z_t$.
+\end{definition}
+
+\begin{definition}[Consumption-equivalent welfare loss]
+Let the expected discounted utility of a policy profile $\pi$ be $W^{\pi}=U_c^{\pi}-U_h^{\pi}$ (consumption and labor parts). For $\theta\neq1$, the consumption-equivalent welfare loss of $\pi$ relative to the benchmark B1 is the uniform percentage increase $\lambda$ in every period's consumption under $\pi$ that would make it as good as B1:
+$(1+\lambda)^{1-\theta}U_c^{\pi}-U_h^{\pi}=W^{\rm B1}$, i.e.\
+$\lambda=\Big(\dfrac{W^{\rm B1}+U_h^{\pi}}{U_c^{\pi}}\Big)^{\frac1{1-\theta}}-1.$
+A positive $\lambda$ means $\pi$ is worse than B1.
+\end{definition}
+
+%==============================================================
+\section{Problem Formulation}
+%==============================================================
+
+\subsection{Environment}
+
+\paragraph{Productivity.}
+$\log e_i^t=\rho_e\log e_i^{t-1}+\sigma_e u_i^t,\quad u_i^t\sim\mathcal N(0,1)$ i.i.d. In the implementation this AR(1) is discretized with a 7-state Rouwenhorst chain \cite{kopecky2010} (levels normalized to $\E[e]=1$), and the \emph{same} chain is used by the simulator and by B1, so B1 is the exact equilibrium of the simulated economy.
+
+\paragraph{Timing in period $t$.}
+\begin{enumerate}
+\item[(1)] $a_i^t$ (predetermined) and $e_i^t$ (drawn) are known; $K_t=\sum_i a_i^t$.
+\item[(2)] Households simultaneously choose $(p_i^t,\hat h_i^t)\sim\pi_\vartheta(\cdot\mid o_i^t)$.
+\item[(3)] $L_t=\max\!\big(\sum_i e_i^t h_i^t,\,L_{\min}\big)$, $\kappa_t=\mathrm{clip}(K_t/L_t,\kappa_{\min},\kappa_{\max})$, prices, taxes and rebate are realized.
+\item[(4)] Budgets settle and rewards are paid.
+\end{enumerate}
+
+\paragraph{Prices.}
+\[
+Y_t=K_t^{\alpha}L_t^{1-\alpha},\quad W_t=(1-\alpha)\kappa_t^{\alpha},\quad R_t=\alpha\kappa_t^{\alpha-1},\quad r_t=R_t-\delta .
+\]
+
+\paragraph{Government (fixed policy).}
+\[
+S_t=\sum_{i}\big[\mathcal T(y_i^t)+\mathcal T^a(a_i^t)\big],\qquad
+\nu_t=\frac{\psi S_t}{N},\qquad G_t=(1-\psi)S_t .
+\]
+
+\paragraph{Household budget.}
+\begin{align*}
+y_i^t &= W_t e_i^t h_i^t + r_t a_i^t, \\
+m_i^t &= a_i^t + y_i^t - \mathcal T(y_i^t) - \mathcal T^a(a_i^t) + \nu_t, \\
+a_i^{t+1} &= p_i^t\, m_i^t, \qquad c_i^t=(1-p_i^t)\,m_i^t .
+\end{align*}
+
+\paragraph{Reward and objective.}
+\[
+R_i^t=\frac{(c_i^t)^{1-\theta}}{1-\theta}-\chi\frac{(h_i^t)^{1+\varphi}}{1+\varphi},
+\qquad
+J_i(\boldsymbol\pi)=\E_{\boldsymbol\pi}\Big[\sum_{t=0}^{T-1}\beta^{t}R_i^t\Big].
+\]
+
+\paragraph{Accounting identity.}
+Because production has constant returns, $W_tL_t+R_tK_t=Y_t$, and summing the household budgets gives, whenever no safeguard binds,
+\begin{equation}
+Y_t=C_t+\big(K_{t+1}-(1-\delta)K_t\big)+G_t,\qquad C_t=\sum_i c_i^t .
+\label{eq:identity}
+\end{equation}
+
+\paragraph{Observation levels.}
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Level & $o_i^t$ \\
+\midrule
+O0 & $(a_i^t,e_i^t)$ \\
+O1 & O0 $\cup\ (W_{t-1},r_{t-1})$ \\
+O2 & O1 $\cup\ (K_t/N,L_{t-1}/N)$ \\
+O3 & O2 $\cup$ mean assets, lagged income and productivity of top-10\% and bottom-50\% wealth groups \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Markov game.}
+$\mathcal M=(\mathcal N,\mathcal S,\{\mathcal O_i\},\{\mathcal A_i\},P,\{R_i\},\beta)$ with
+$s_t=(\mathbf a_t,\mathbf e_t,W_{t-1},r_{t-1},L_{t-1})$ and $\mathcal A_i=[p_{\min},p_{\max}]\times[0,1]$.
+
+\subsection{Learning problem}
+
+Households use a common policy $\pi_\vartheta$, so the learning problem is
+\begin{equation}
+\max_{\vartheta}\ \bar J(\vartheta)=\frac1N\sum_{i=1}^N J_i(\pi_\vartheta,\dots,\pi_\vartheta),
+\qquad \text{subject to the dynamics above.}
+\end{equation}
+The resulting symmetric profile is denoted $\pi^{\rm MARL}_N$. (Section~\ref{sec:c4} explains that the implemented update credits each household only with its \emph{own} reward, so the learned profile is a candidate competitive/Nash outcome rather than a planner's optimum.)
+
+\subsection{Known-model benchmark (B1)}
+
+For given $(\kappa,\nu)$ let $W(\kappa),r(\kappa)$ be the prices above and, for hours $h$,
+\[
+y=W(\kappa)\,e\,h+r(\kappa)\,a,\qquad m(a,e,h)=a+y-\mathcal T(y)-\mathcal T^a(a)+\nu .
+\]
+The infinite-horizon, price-taking Bellman equation is
+\begin{equation}
+V(a,e)=\max_{a'\ge0,\ h\in[h_{\min},h_{\max}]}\ \Big\{u\big(m(a,e,h)-a',h\big)+\beta\,\E\big[V(a',e')\mid e\big]\Big\},
+\label{eq:bellman}
+\end{equation}
+with $u(c,h)=\frac{c^{1-\theta}}{1-\theta}-\chi\frac{h^{1+\varphi}}{1+\varphi}$. Let $\mu_{\kappa,\nu}$ be the stationary distribution of $(a,e)$ under the optimal policy, and
+\[
+K^s(\kappa,\nu)=\int a\,d\mu_{\kappa,\nu},\qquad L^s(\kappa,\nu)=\int e\,h^\star\,d\mu_{\kappa,\nu}.
+\]
+The benchmark equilibrium $(\kappa^\star,\nu^\star)$ solves
+\begin{equation}
+\frac{K^s(\kappa^\star,\nu^\star)}{L^s(\kappa^\star,\nu^\star)}=\kappa^\star,\qquad
+\nu^\star=\psi\int\big[\mathcal T(y)+\mathcal T^a(a)\big]\,d\mu_{\kappa^\star,\nu^\star}.
+\end{equation}
+
+\subsection{Metrics}
+
+Let $\hat\kappa$, $\hat\ell$, $\hat s$ denote the time-averaged capital--labor ratio, mean hours and saving rate of the learned economy, and $\kappa^\star,\ell^\star,s^\star$ their B1 counterparts.
+
+\begin{align}
+\text{Aggregate gap:}\quad & \Delta_{\rm agg}(N)=\Big|\tfrac{\hat\kappa-\kappa^\star}{\kappa^\star}\Big|,\ \Big|\tfrac{\hat\ell-\ell^\star}{\ell^\star}\Big|,\ \Big|\tfrac{\hat s-s^\star}{s^\star}\Big| \\
+\text{Policy gap:}\quad & \Delta_{\rm pol}(N)=\E_{(a,e)\sim\mu^\star}\big[\,|p^{\rm MARL}-p^{\rm B1}|\,\big]\ \text{(and the analogue for hours)} \\
+\text{Welfare gap:}\quad & \lambda(N)\ \text{from the consumption-equivalent definition} \\
+\text{Inequality:}\quad & \mathrm{Gini}(x)=\frac{\sum_{i}\sum_{j}|x_i-x_j|}{2N^2\bar x},\quad \text{top-10\% wealth share}
+\end{align}
+
+\paragraph{Approximate exploitability.}
+Fix all households but $i$ at $\pi^{\rm MARL}_N$ and let $\tilde\pi_i$ be a best-response policy for household $i$ (computed by dynamic programming or trained by single-agent RL). For households at wealth quantile $q$,
+\begin{equation}
+\varepsilon_q(N)=\mathrm{CEV}\Big(J_i(\tilde\pi_i,\pi^{\rm MARL}_{N,-i})\ \text{vs.}\ J_i(\pi^{\rm MARL}_N)\Big),
+\end{equation}
+which is a lower bound on the true exploitability because $\tilde\pi_i$ is itself approximate. Any $\varepsilon_q>0$ shows that $\pi^{\rm MARL}_N$ is not a Nash equilibrium.
+
+\subsection{Research questions and hypotheses}\label{sec:hyp}
+
+\begin{hypothesis}[RQ1: recovery of the known-model equilibrium]
+Learned policies approach B1 in aggregates ($\kappa$, hours, saving rate) but differ systematically in the tails of the wealth distribution, where data are sparse.
+\end{hypothesis}
+
+\begin{hypothesis}[RQ2: population size and price impact]
+A single household moves prices by $O(1/N)$. Hence there exist constants $c,\Delta_0>0$ such that $\Delta(N)\approx cN^{-1}+\Delta_0$, where $\Delta_0$ is a learning-noise floor; in a log--log plot of $\Delta(N)-\Delta_0$ against $N$ the slope is close to $-1$.
+\end{hypothesis}
+
+\begin{hypothesis}[RQ3: information]
+Moving from O0 to O2 reduces $\Delta_{\rm agg}$ and $\Delta_{\rm pol}$ substantially; O3 gives smaller additional gains.
+\end{hypothesis}
+
+\begin{hypothesis}[RQ4: tax response]
+The elasticities $\dfrac{d\log L}{d\log(1-\tau)}$ and $\dfrac{d\log K}{d\log(1-\tau)}$ estimated from MARL have the same sign as those from B1 but differ in magnitude.
+\end{hypothesis}
+
+%==============================================================
+\section{Methodology}\label{sec:method}
+%==============================================================
+
+The system consists of the six components proposed at the project review (C1--C6), each implemented as a module of the repository (Table~\ref{tab:plan}). The pipeline is: calibrate $\chi$ $\rightarrow$ solve B1 for every tax regime $\rightarrow$ evaluate the non-learning baselines $\rightarrow$ train the 49 MARL runs $\rightarrow$ evaluate each run against B1 $\rightarrow$ generate all tables and figures from the stored results.
+
+\begin{table}[h]
+\centering
+\caption{From proposal to implementation. ``Core'' and ``stretch'' refer to the plan in the project-review report.}
+\label{tab:plan}
+\small
+\begin{tabular}{@{}p{2.6cm}p{4.3cm}p{6.2cm}p{1.6cm}@{}}
+\toprule
+\textbf{Component} & \textbf{Planned} & \textbf{Implemented (module)} & \textbf{Status}\\
+\midrule
+C1 Simulator & \texttt{float64}, safeguards, identity test & $[M,N]$ PyTorch simulator, 10 accounting tests (\texttt{env.py}) & done\\
+C2 Benchmark B1 & Rouwenhorst, VFI or EGM, histogram, bisection & EGM with endogenous labor, Young histogram, Brent; VFI cross-check (\texttt{b1\_solver.py}) & done\\
+C3 Baselines & B0, B2 grid search & B0, B1-in-simulator, B2, Random (\texttt{baselines.py}) & done\\
+C4 Learners & IPPO (core), MAPPO (stretch) & both, Beta policies, O0--O3 (\texttt{ppo.py}, \texttt{obs.py}) & done\\
+C5 Metrics & gaps, CEV, Gini, convergence, $\ge5$ seeds & all metrics (\texttt{evaluate.py}, \texttt{metrics.py}); 5 seeds in E1, 3 in E2--E4 & partly\\
+C6 Exploitability & single-agent RL best response & DP best response \emph{and} PPO best response (\texttt{best\_response.py}) & done\\
+E1--E2 (core) & $N\in\{10,\dots,300\}$, 1000 if possible & $N\in\{10,30,100,300,1000\}$ & done\\
+E3--E4 (stretch) & O0--O3; $\tau\in\{0,.1,.2,.3\}$, $\psi\in\{0,1\}$ & as planned & done\\
+Ablations A1--A4 & if time permits & not run & not done\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{C1: Vectorized simulator with exact accounting}\label{sec:c1}
+The economy is simulated as $M$ independent economies of $N$ households each, held in $[M,N]$ \texttt{float64} PyTorch tensors, so one call advances all households of all economies by one period in the order of Section~3. Actions are normalized to $(\hat p,\hat h)\in[0,1]^2$ and mapped to $p=p_{\min}+(p_{\max}-p_{\min})\hat p$ with $p\in[0.001,0.99]$, and to $h=\hat h\in[0,1]$. At $t=0$ the lagged prices required by O1--O3 are defined from a ``pre-period'' in which everyone works $h=1/3$.
+
+\textbf{Safeguards.} $L_{\min}=10^{-3}N$; $\kappa\in[\kappa_{\min},\kappa_{\max}]=[0.5,60]$; and a consumption floor $c\ge10^{-3}$ that is used \emph{only} inside the utility, never in the budget, so the accounting stays exact. Because $p<1$ and $m>0$, consumption and next-period assets are always non-negative.
+
+\textbf{Accounting tests.} \texttt{tests/test\_accounting.py} simulates 16 economies for 50 periods under uniformly random actions in 8 configurations ($N\in\{10,100\}$ times four $(\tau,\tau^a,\psi,\xi)$ settings, including a wealth tax and a progressive schedule with $\xi=0.1$) and asserts $|Y_t-C_t-K_{t+1}+(1-\delta)K_t-G_t|/Y_t<10^{-9}$ at every step where no safeguard binds. Two further tests check the household budget $a'+c=m$ (to $10^{-12}$), the government budget $N\nu+G=S$, and Euler's theorem $WL+RK=Y$.
+
+\textbf{Calibration.} We use $\alpha=0.36$, $\delta=0.06$, $\beta=0.96$, $\theta=1.5$, $\varphi=2$, $\rho_e=0.9$, $\sigma_e=0.2$. The weight $\chi=29.70$ is chosen by Brent's method on $\log\chi\in[\log5,\log60]$ so that mean hours in the $\tau=0$ B1 equilibrium equal $h_{\max}/3$ (\texttt{scripts/calibrate.py}). Initial wealth is lognormal with $\sigma_a=1.8$ and, instead of a mean of one as originally planned, a mean equal to B1 capital per household ($2.953$), so that every economy starts at the scale of the equilibrium; initial productivity is drawn from the stationary distribution of the chain.
+
+\subsection{C2: Known-model benchmark B1}\label{sec:c2}
+With a proportional income tax ($\xi=0$) and a linear wealth tax $\mathcal T^a(a)=\tau^a a$, the budget in Eq.~\eqref{eq:bellman} at constant prices becomes
+\begin{equation}
+c+a'=R_a\,a+w_e\,h+\nu,\qquad R_a=1+(1-\tau)r-\tau^a,\qquad w_e=(1-\tau)W e .
+\end{equation}
+The first-order conditions of the household problem are the Euler equation and the intratemporal labor condition,
+\begin{equation}
+c^{-\theta}\ \ge\ \beta R_a\,\E\big[c'^{-\theta}\mid e\big]\ \ (\text{with equality if } a'>0),\qquad
+\chi h^{\varphi}=c^{-\theta}w_e .
+\label{eq:foc}
+\end{equation}
+
+\textbf{Endogenous grid method (EGM) with endogenous labor \cite{carroll2006}.} We fix a grid of \emph{next-period} assets $a'_j$ (200 points on $[0,400]$, spaced as $400\,x^{2.5}$ so that points are dense near the borrowing limit). Given the current guess $c(\cdot,e')$, the Euler equation gives consumption $\tilde c_j$ directly, without root finding; the labor condition gives hours $\tilde h_j$; and the budget is inverted to recover the current assets $\tilde a_j$ at which $(\tilde c_j,\tilde h_j,a'_j)$ is optimal. Interpolating $(\tilde a_j,\tilde c_j)$ back onto the grid gives the new consumption function. For $a<\tilde a_0$ the borrowing constraint binds: $a'=0$ and $h$ solves $\chi h^\varphi=(R_aa+w_eh+\nu)^{-\theta}w_e$, which we solve by vectorized bisection (80 steps). We iterate until $\max|c^{\rm new}-c|/(1+c)<10^{-10}$ (about 500 iterations).
+
+\textbf{Stationary distribution.} We use Young's histogram (lottery) method \cite{young2010}: on a 1000-point asset grid, the mass at $(a,e)$ is split between the two grid points that bracket $a'(a,e)$, in proportion to distance, and then moved across productivity states with $P(e'\mid e)$. This defines a sparse transition matrix, and $\mu$ is its fixed point, found by power iteration to an $\ell_1$ tolerance of $10^{-13}$.
+
+\textbf{Market clearing.} The excess-supply function $\kappa\mapsto K^s/L^s-\kappa$ is solved with Brent's method (tolerance $10^{-9}$). The bracket is chosen so that a stationary solution exists: the upper interest rate is $r_{\max}=((1/\beta-1)+\tau^a)/(1-\tau)-10^{-4}$, which guarantees $\beta R_a<1$, and the lower one is $r=0$. When revenue is rebated ($\psi>0$), the rebate is updated inside each $\kappa$ evaluation by the damped fixed point $\nu\leftarrow\frac12\nu+\frac12\psi S(\mu)$ until $|\Delta\nu|<10^{-11}$. Algorithm~\ref{alg:b1} summarizes the solver.
+
+\begin{algorithm}[t]
+\caption{B1: stationary equilibrium with endogenous labor (EGM + histogram + Brent)}\label{alg:b1}
+\small
+\begin{algorithmic}[1]
+\Function{Household}{$W,r,\nu$} \Comment{EGM on the grid of next-period assets $a'_j$}
+\State $c(a,e)\gets$ constrained consumption (guess)
+\Repeat
+  \State $\tilde c_j(e)\gets\big(\beta R_a\sum_{e'}P(e'|e)\,c(a'_j,e')^{-\theta}\big)^{-1/\theta}$ \Comment{Euler equation}
+  \State $\tilde h_j(e)\gets\mathrm{clip}\big((\tilde c_j^{-\theta}w_e/\chi)^{1/\varphi},0,1\big)$ \Comment{labor FOC}
+  \State $\tilde a_j(e)\gets(\tilde c_j+a'_j-w_e\tilde h_j-\nu)/R_a$ \Comment{invert the budget}
+  \State $c(a,e)\gets$ interpolate $(\tilde a_j,\tilde c_j)$ at $a$; for $a<\tilde a_0$ use $a'=0$ and the constrained labor FOC
+\Until{$\max|c^{\rm new}-c|/(1+c)<10^{-10}$}
+\EndFunction
+\Function{Excess}{$\kappa$}
+  \State $W\gets(1-\alpha)\kappa^\alpha$;\; $r\gets\alpha\kappa^{\alpha-1}-\delta$;\; $\nu\gets0$
+  \Repeat
+    \State policy $\gets$ \Call{Household}{$W,r,\nu$};\; $\mu\gets$ fixed point of the Young transition matrix
+    \State $\nu\gets\frac12\nu+\frac12\psi S(\mu)$
+  \Until{$|\Delta\nu|<10^{-11}$}
+  \State \Return $K^s(\mu)/L^s(\mu)-\kappa$
+\EndFunction
+\State $\kappa^\star\gets$ Brent root of \Call{Excess}{$\cdot$} on $[\kappa(r_{\max}),\kappa(0)]$;\; \Return policy, $\mu^\star$, $(\kappa^\star,\nu^\star)$
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Validation} (\texttt{tests/test\_b1.py}, 6 tests): market clearing holds to $10^{-6}$; the equilibrium interest rate lies below the rate of time preference ($r^\star<1/\beta-1$), as precautionary saving requires; the mean (max) $\log_{10}$ relative Euler-equation error is at most $-7.28$ ($-4.10$) across the seven tax regimes; $\mu$ is a probability distribution; the government budget balances ($\nu^\star=S$ to $10^{-8}$); and a brute-force value-function iteration on a separate 300-point grid reproduces the EGM saving and hours policies to within grid resolution (median differences $<0.1$ in $a'$ and $<0.02$ in $h$).
+
+\subsection{C3: Baselines}\label{sec:c3}
+\textbf{B1-in-simulator.} The DP policy is executed by all $N$ households inside the finite-$N$ simulator: a household in state $(a,e)$ plays $p=a'(a,e)/\big(a'(a,e)+c(a,e)\big)$ and $h=h(a,e)$, evaluated at equilibrium prices. Prices in the simulator are then realized from the actual finite-$N$ aggregates, so B1 and MARL are compared under identical dynamics, safeguards and random numbers. This isolates the finite-$N$ error of the exact policy itself.
+\textbf{B0.} The $\tau=0$ economy, used as the reference point for the tax responses in E4 (in E1, where $\tau=0$, B0 and B1 coincide).
+\textbf{B2.} The best constant policy $(\bar p,\bar h)$ shared by all households: a $19\times15$ grid search over $p\in[0.05,0.95]$, $h\in[0.05,0.75]$ in the simulator ($N=100$, 4 replications, 300 periods), followed by an $11\times11$ refinement within $\pm0.05$ of the best point. The optimum is $(\bar p,\bar h)=(0.83,0.35)$.
+\textbf{Random.} Uniform actions; a lower reference, as in TaxAI.
+
+\subsection{C4: Shared-policy IPPO and MAPPO}\label{sec:c4}
+\textbf{Policy.} All households share one actor (parameter sharing). The actor is a two-hidden-layer MLP (64 units, $\tanh$) that maps the observation to four numbers $z$, and the action distribution is a product of two Beta distributions,
+\begin{equation}
+\pi_\vartheta(\hat p,\hat h\mid o)=\mathrm{Beta}(\hat p;\alpha_1,\beta_1)\,\mathrm{Beta}(\hat h;\alpha_2,\beta_2),\qquad (\alpha_k,\beta_k)=1+\mathrm{softplus}(z).
+\end{equation}
+Beta policies live on $(0,1)$ and therefore respect the action bounds without the bias of clipping a Gaussian. Observations use fixed transformations, $\log(1+a)$, $\log e/\sigma_{\log e}$, $\log W_{t-1}$, $10\,r_{t-1}$, $\log(1+K_t/N)$, $3L_{t-1}/N$, and the six group statistics of O3, which gives dimensions $2,4,6,12$ for O0--O3.
+
+\textbf{Critics.} IPPO \cite{dewitt2020} uses a local critic $V(o_i)$. MAPPO \cite{yu2022} uses a centralized critic $V(o_i,g(s))$, where $g$ is an 11-dimensional permutation-invariant summary of the whole economy: $\log(1+\bar a)$, the 10/25/50/75/90\% quantiles and the standard deviation of $\log(1+a)$, mean productivity, and the lagged wage, interest rate and labor. Both critics are MLPs of the same size as the actor.
+
+\textbf{Objective.} Training follows PPO \cite{schulman2017} with generalized advantage estimation (GAE) \cite{schulman2016gae}. For household $i$ at time $t$, with critic input $x_i^t$ ($o_i^t$ for IPPO, $[o_i^t,g(s_t)]$ for MAPPO),
+\begin{gather}
+\delta_i^t=\tilde R_i^t+\gamma V(x_i^{t+1})-V(x_i^t),\qquad \hat A_i^t=\sum_{l\ge0}(\gamma\lambda)^l\,\delta_i^{t+l},\\
+\mathcal L(\vartheta)=-\E\Big[\min\big(\rho_i^t\hat A_i^t,\ \mathrm{clip}(\rho_i^t,1-\epsilon,1+\epsilon)\hat A_i^t\big)\Big]
++c_v\,\E\big[(V(x_i^t)-\hat G_i^t)^2\big]-c_e\,\E\big[\mathcal H(\pi_\vartheta(\cdot\mid o_i^t))\big],
+\end{gather}
+where $\rho_i^t=\pi_\vartheta(u_i^t\mid o_i^t)/\pi_{\vartheta_{\rm old}}(u_i^t\mid o_i^t)$, $\hat G_i^t=\hat A_i^t+V(x_i^t)$, and $\tilde R_i^t=(1-\beta)R_i^t$ is the reward scaled to ``per-period utility'' units. The RL discount equals the household discount, $\gamma=\beta=0.96$, so the RL objective \emph{is} the household's objective. Episodes last 200 periods from a fresh lognormal draw; because the economic problem has an infinite horizon, the last step is bootstrapped with $V(x^{200})$ instead of being treated as terminal.
+
+\textbf{Why the game stays general-sum.} Each household's advantage is computed from its \emph{own} reward only. The shared update is therefore the average of the households' own-policy gradients, $\frac1N\sum_i\nabla_{\vartheta_i}J_i$ evaluated at the symmetric profile, and not the gradient of the cooperative objective $\bar J$, which would also credit a household for the effect of its saving on everyone else's prices. Each learner thus treats prices as part of its environment, like a price-taker, and the fixed point of learning is a candidate competitive equilibrium rather than a planner's allocation.
+
+\textbf{Hyperparameters.} Each iteration collects $8\times10^4$ household-steps from $M=\max(1,\mathrm{round}(8\times10^4/(200N)))$ parallel economies ($M=40,13,4,1,1$ for $N=10,30,100,300,1000$), followed by 4 epochs of minibatch (8192) Adam updates on the pooled data of all households (advantages normalized per batch). Learning rate $10^{-3}$ linearly decayed to 0 over 300 iterations, clip $\epsilon=0.2$, $\lambda=0.95$, $c_e=10^{-3}$, $c_v=0.5$, gradient-norm clip $0.5$. The learning rate was chosen from $\{3\cdot10^{-4},10^{-3}\}$ on one tuning seed (IPPO, O3, $N=100$): after 300 iterations the evaluation welfare was $-81.53$ with $10^{-3}$ against $-82.74$ with $3\cdot10^{-4}$ (\texttt{results/tune/}). Algorithm~\ref{alg:ppo} summarizes training.
+
+\begin{algorithm}[t]
+\caption{Shared-policy IPPO / MAPPO for $N$ households}\label{alg:ppo}
+\small
+\begin{algorithmic}[1]
+\State initialize shared actor $\pi_\vartheta$ and critic $V_\omega$
+\For{iteration $k=1,\dots,300$}
+  \State reset $M$ economies: lognormal wealth, stationary productivity
+  \For{$t=0,\dots,199$} \Comment{all $M\cdot N$ households act in parallel}
+    \State $o_i^t\gets$ \Call{Obs}{$s^t$, level}; sample $(\hat p_i^t,\hat h_i^t)\sim\pi_\vartheta(\cdot\mid o_i^t)$
+    \State step the simulator (prices, taxes, budgets); store $(o_i^t,x_i^t,u_i^t,\tilde R_i^t,\log\pi_\vartheta(u_i^t\mid o_i^t))$
+  \EndFor
+  \State $x_i^t\gets o_i^t$ (IPPO) or $[o_i^t,g(s^t)]$ (MAPPO); per-household GAE with $\gamma=\beta$, bootstrap at $t=200$
+  \State 4 epochs of minibatch Adam steps on the clipped-surrogate + value + entropy loss, pooled over households
+  \State every 20 iterations: evaluate the deterministic policy (Beta mean) and log $\kappa$, hours, Gini, $\bar J$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{C5: Evaluation protocol and metrics}\label{sec:c5}
+Every trained policy is evaluated deterministically (Beta mean) in 8 economies (2 for $N=1000$) for 500 periods from a common lognormal draw, using \emph{common random numbers}: every policy, including B1-in-simulator, faces the same initial wealth and the same productivity shocks. Stationary statistics are averaged over $t\in[300,500)$ and over economies.
+\begin{itemize}
+\item \textbf{Aggregate gap:} $|\hat\kappa-\kappa^\star|/\kappa^\star$, plus the hours and saving-rate ($\sum_i a_i'/\sum_i m_i$) gaps.
+\item \textbf{Policy gap:} $\sum_{a,e}\mu^\star(a,e)\,|p^{\rm MARL}(a,e)-p^{\rm B1}(a,e)|$ on the 1000-point histogram grid, and likewise for $h$. The learner's aggregate inputs are fixed at their long-run averages recorded during evaluation.
+\item \textbf{Welfare:} $\bar J$ is the average discounted utility over the 500 periods, split into $U_c$ and $U_h$; the consumption-equivalent welfare loss $\lambda$ relative to B1-in-simulator follows the definition in Section~2 (closed form).
+\item \textbf{Inequality:} wealth Gini $\sum_i(2i-N-1)a_{(i)}/(N\sum_i a_i)$ (sorted wealth) and the top-10\% wealth share.
+\item \textbf{Convergence:} the first evaluation (every 20 iterations) at which $\bar J$ closes 95\% of its total improvement.
+\item \textbf{Seeds:} 5 per algorithm in E1 and 3 per configuration in E2--E4; we report mean $\pm$ sample s.d.
+\end{itemize}
+
+\subsection{C6: Approximate exploitability}\label{sec:c6}
+We freeze the learned population and measure how much one household gains by deviating.
+\begin{enumerate}
+\item \textbf{Snapshot.} The learned economy is run for 300 periods (32 economies; 8 for $N=1000$) and its final state is kept. In each economy, household 0 is placed at the 10th, 50th or 90th wealth percentile with median productivity.
+\item \textbf{DP best response.} B1's household solver is run at the learned economy's long-run prices and rebate $(\bar W,\bar r,\bar\nu)$, giving the exact best response of a price-taker. If under-saving pushes $\beta R_a\ge1$, no stationary optimum exists; we then use the period-0 policy of the 200-period problem (200 backward EGM steps from a terminal period that consumes everything), which is still a valid deviation. This happened in 13 of the 49 runs.
+\item \textbf{PPO best response} (E1 only). A single deviator, warm-started from the shared actor with a fresh critic (10 iterations of critic warm-up), is trained for 100 PPO iterations (actor learning rate $10^{-4}$) in 128 economies drawn from the snapshot, while everyone else plays the frozen policy. Every 20 iterations the deviator is scored on a separate validation snapshot, and the best checkpoint, including the warm start itself, is kept.
+\item \textbf{Scoring.} Both deviations are rolled out for 200 periods with and without the deviation under common random numbers. Exploitability is the deviator's consumption-equivalent gain in \%, averaged over economies and over the three wealth percentiles.
+\end{enumerate}
+Two sanity checks confirm the measure: the DP best response gains $-0.01\%$ against B1 itself (it \emph{is} the best response) and $3.32\%$ against the constant policy B2.
+
+\subsection{Experimental design and compute}\label{sec:design}
+Table~\ref{tab:experiments} lists the 49 training runs. The default setting is $N=100$, O3, $\tau=0$, $\psi=1$; E2--E4 reuse the corresponding E1 runs for $N=100$, O3 and $\tau=0$. Only the proportional tax ($\xi=0$) and $\theta=1.5$ were run. All experiments ran on a 12-core laptop CPU without a GPU: the benchmarks take about 20 minutes, and the 49 runs about 2 hours with five parallel workers (each IPPO run at $N=100$ takes about 10 minutes on 2 threads).
+
+\begin{table}[h]
+\centering
+\caption{Experiments actually run (IPPO unless stated). Household-steps per run: $2.4\times10^7$ ($N\le100$), $1.8\times10^7$ ($N=300$), $6\times10^7$ ($N=1000$).}
+\label{tab:experiments}
+\small
+\begin{tabular}{@{}p{1.0cm}p{6.2cm}p{1.4cm}p{4.6cm}p{1.2cm}@{}}
+\toprule
+\textbf{Exp.} & \textbf{Factors} & \textbf{Runs} & \textbf{Measured} & \textbf{Tests}\\
+\midrule
+E1 & IPPO and MAPPO vs.\ B0/B1/B2/Random; $N=100$, O3, $\tau=0$ & $2\times5$ & all metrics, PPO-BR & H1\\
+E2 & $N\in\{10,30,300,1000\}$ (+ $N=100$ from E1) & $4\times3$ & $\kappa$ gap vs.\ $N$, fit $c/N+\Delta_0$ & H2\\
+E3 & O0, O1, O2 (+ O3 from E1) & $3\times3$ & gaps, welfare, convergence & H3\\
+E4 & $\tau\in\{0.1,0.2,0.3\}\times\psi\in\{0,1\}$ (+ $\tau=0$) & $6\times3$ & $K$, hours, Gini, elasticities & H4\\
+\midrule
+Total & & 49 & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%==============================================================
+\section{Results}\label{sec:results}
+%==============================================================
+
+Unless stated otherwise, the setting is $N=100$, O3, $\tau=0$ and $\psi=1$. Numbers are mean $\pm$ s.d.\ across seeds. All tables below are copied verbatim from \texttt{report/tables/*.tex}, which \texttt{scripts/make\_report\_assets.py} writes from the stored evaluation files \texttt{results/runs/*/eval.json} and \texttt{results/benchmarks.json}; the figures are produced by the same script.
+
+\subsection{Verification of the simulator and the benchmark}
+All 16 automated tests pass (\texttt{results/pytest.log}): the resource constraint~\eqref{eq:identity} holds to $10^{-9}$ in all eight configurations, and the B1 solver passes its six checks. Table~\ref{tab:b1} reports the B1 equilibrium for all seven tax regimes. It passes the sanity check planned in the proposal: capital falls monotonically as $\tau$ rises, and more so when the revenue is rebated. The after-tax return $(1-\tau)r^\star$ is always below the rate of time preference $1/\beta-1=4.17\%$, as precautionary saving requires, and $6$--$8\%$ of households are at the borrowing constraint. When the DP policy is executed by $N=100$ households in the simulator, $\kappa$ deviates from $\kappa^\star$ by at most $0.8\%$, so the simulator and the solver describe the same economy.
+
+\begin{table}[h]
+\centering
+\caption{B1 equilibria. constr.: mass at the borrowing constraint. $\kappa$ in sim.: B1 policy executed by $N=100$ households in the simulator. Euler err.: mean (max) $\log_{10}$ relative Euler-equation error.}
+\label{tab:b1}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ccccccccccc}
+\toprule
+$\tau$ & $\psi$ & $\kappa^\star$ & $r^\star$ & $\nu^\star$ & hours & $K/N$ & Gini & constr. & $\kappa$ in sim. & Euler err.\\
+\midrule
+0.0 & 1 & 8.713 & 3.01\% & 0.0000 & 0.3333 & 2.953 & 0.549 & 0.074 & 8.745 & -7.28 (-4.10)\\
+0.1 & 0 & 8.141 & 3.41\% & 0.0000 & 0.3376 & 2.798 & 0.542 & 0.070 & 8.172 & -7.31 (-4.23)\\
+0.1 & 1 & 8.015 & 3.50\% & 0.0537 & 0.3207 & 2.632 & 0.554 & 0.076 & 8.049 & -7.36 (-4.64)\\
+0.2 & 0 & 7.506 & 3.91\% & 0.0000 & 0.3424 & 2.620 & 0.534 & 0.066 & 7.536 & -7.35 (-4.60)\\
+0.2 & 1 & 7.269 & 4.11\% & 0.1019 & 0.3075 & 2.306 & 0.561 & 0.080 & 7.309 & -7.45 (-4.98)\\
+0.3 & 0 & 6.800 & 4.56\% & 0.0000 & 0.3482 & 2.417 & 0.526 & 0.060 & 6.830 & -7.39 (-4.53)\\
+0.3 & 1 & 6.472 & 4.90\% & 0.1438 & 0.2936 & 1.976 & 0.567 & 0.084 & 6.525 & -7.56 (-5.04)\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{E1: Does decentralized learning recover the competitive equilibrium?}
+
+\begin{table}[t]
+\centering
+\caption{E1 at $N=100$. B1 in simulator executes the DP policy in the same finite-$N$ simulator with common random numbers. W-loss: consumption-equivalent welfare loss relative to B1 in simulator. DP-BR / PPO-BR: a single deviator's consumption-equivalent gain (mean of the 10th, 50th and 90th wealth percentiles).}
+\label{tab:e1}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccccccc}
+\toprule
+Policy & $\kappa$ & $K/N$ & hours & $a'/m$ & Gini & Top-10\% & W-loss (\%) & DP-BR (\%) & PPO-BR (\%)\\
+\midrule
+B1 (theory, $N{=}\infty$) & 8.713 & 2.953 & 0.333 & 0.840 & 0.549 & 0.342 & -- & -- & --\\
+B1 in simulator & 8.745 & 2.955 & 0.333 & 0.840 & 0.545 & 0.337 & 0.00 & -0.01 & --\\
+B2 (best constant) & 7.985 & 2.790 & 0.350 & 0.830 & 0.196 & 0.174 & 13.53 & 3.32 & --\\
+Random & 0.889 & 0.442 & 0.500 & 0.495 & 0.513 & 0.352 & 3583.29 & -- & --\\
+IPPO ($n{=}5$) & 7.532 $\pm$ 0.086 & 2.520 $\pm$ 0.032 & 0.334 $\pm$ 0.002 & 0.823 $\pm$ 0.001 & 0.464 $\pm$ 0.017 & 0.297 $\pm$ 0.007 & 1.36 $\pm$ 0.10 & 0.40 $\pm$ 0.07 & -0.00 $\pm$ 0.00\\
+MAPPO ($n{=}5$) & 7.563 $\pm$ 0.122 & 2.530 $\pm$ 0.052 & 0.334 $\pm$ 0.002 & 0.824 $\pm$ 0.002 & 0.454 $\pm$ 0.010 & 0.291 $\pm$ 0.010 & 1.30 $\pm$ 0.19 & 0.42 $\pm$ 0.13 & 0.02 $\pm$ 0.05\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_e1_learning.pdf}
+\caption{E1 learning curves (5 seeds, mean $\pm$ s.d.), evaluated every 20 iterations with the deterministic policy in 4 economies over 300 periods. Dashed: B1 executed under the same (shorter) evaluation protocol, which is why its $\kappa$ differs slightly from Table~\ref{tab:e1}.}
+\label{fig:e1learn}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_e1_policy.pdf}
+\caption{Learned (IPPO, seed 0) and B1 policy functions for low, median and high productivity, with the learner's aggregate inputs fixed at their long-run means.}
+\label{fig:e1policy}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_e1_wealth.pdf}
+\caption{Stationary wealth distribution at $t=500$, pooled over seeds and the 8 evaluation economies. Left: Lorenz curves. Right: density of $\log(1+a)$.}
+\label{fig:e1wealth}
+\end{figure}
+
+Table~\ref{tab:e1} and Figures~\ref{fig:e1learn}--\ref{fig:e1wealth} answer RQ1.
+
+\textbf{Learning dynamics.} Welfare converges within 40 iterations ($3.2\times10^6$ household-steps) for both learners, while $\kappa$ and the Gini keep creeping up slowly until the end of training (Figure~\ref{fig:e1learn}).
+
+\textbf{Aggregates.} The learned stationary economy \emph{matches B1 in labor supply} (hours $0.334$ vs.\ $0.333$) but \emph{under-accumulates capital}: $\kappa=7.53\pm0.09$ (IPPO) and $7.56\pm0.12$ (MAPPO) against $\kappa^\star=8.71$, a gap of $13.6\%$. This is more than 30 times the finite-$N$ error of B1 itself ($0.4\%$), so it is a learning effect, not a finite-$N$ effect. Correspondingly, the interest rate is higher ($3.9\%$ vs.\ $3.0\%$) and the aggregate saving rate lower ($0.823$ vs.\ $0.840$).
+
+\textbf{Policies.} The saving-ratio function is learned closely (policy gap $0.047$; Figure~\ref{fig:e1policy}, left). The remaining error sits near the borrowing constraint: at $a=0$ a low-productivity learner (seed 0) still saves $21\%$ of cash-on-hand, where B1 saves nothing, and wealthy households save slightly too little. Hours are learned less well: the learned wealth effect on labor is too weak, so a wealthy ($a=20$) low-productivity household works $0.23$ instead of $0.13$ (Figure~\ref{fig:e1policy}, right).
+
+\textbf{Inequality.} The learned economy is markedly more equal (Gini $0.46$ vs.\ $0.55$, top-10\% share $0.30$ vs.\ $0.34$). Figure~\ref{fig:e1wealth} shows why: it lacks both the spike of constrained households at $a=0$ (B1 puts $7.4\%$ of households there) and the right tail of rich households, exactly the tails where experience is sparse, as H1 predicted.
+
+\textbf{Welfare.} The consumption-equivalent welfare loss is only $1.36\pm0.10\%$ (IPPO) and $1.30\pm0.19\%$ (MAPPO). The best constant policy B2 loses $13.5\%$ and random actions lose almost everything, so learning closes about $90\%$ of the welfare gap between a naive rule and the equilibrium.
+
+\textbf{Exploitability.} The learned profile is \emph{not} a Nash equilibrium. The exact DP best response to the learned economy's prices gains $0.40\pm0.07\%$ consumption-equivalent (10th/50th/90th percentile: $0.42/0.26/0.53\%$). By contrast, the PPO best response finds essentially \emph{no} improvement ($0.00\%$ for IPPO, $0.02\pm0.05\%$ for MAPPO): in 9 of the 10 runs no checkpoint beats the warm-start policy on the validation snapshot. A model-free deviator thus misses the gain that the model-based deviator finds, so learning-based exploitability estimates can badly understate the distance to equilibrium.
+
+\textbf{MAPPO vs.\ IPPO.} The centralized critic changes nothing measurable; every metric overlaps within one s.d. This is consistent with the price-taking structure: with $N=100$ a household's value depends on the rest of the economy only through two prices, which O3 already summarizes.
+
+\emph{Verdict on H1: supported.} MARL approaches B1 in labor supply and welfare, misses capital by $14\%$, and deviates most in the tails of the wealth distribution.
+
+\subsection{E2: Does the gap shrink with population size?}
+
+\begin{table}[t]
+\centering
+\caption{E2: population size (IPPO, O3). B1-sim gap: $|\kappa^{\rm B1\text{-}sim}-\kappa^\star|/\kappa^\star$, the finite-$N$ error of the exact policy itself. Time: training wall-clock per run.}
+\label{tab:e2}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{rcccccccc}
+\toprule
+$N$ & $n$ & $|\Delta\kappa|/\kappa^\star$ & B1-sim gap & $p$-gap & $h$-gap & W-loss (\%) & DP-BR (\%) & time (min)\\
+\midrule
+10 & 3 & 0.155 $\pm$ 0.008 & 0.023 & 0.065 $\pm$ 0.006 & 0.022 $\pm$ 0.003 & -1.54 $\pm$ 0.05 & -0.33 $\pm$ 0.04 & 7.6\\
+30 & 3 & 0.154 $\pm$ 0.018 & 0.054 & 0.056 $\pm$ 0.005 & 0.016 $\pm$ 0.001 & 0.78 $\pm$ 0.13 & 0.86 $\pm$ 0.24 & 9.2\\
+100 & 5 & 0.136 $\pm$ 0.010 & 0.004 & 0.047 $\pm$ 0.010 & 0.014 $\pm$ 0.001 & 1.36 $\pm$ 0.10 & 0.40 $\pm$ 0.07 & 9.8\\
+300 & 3 & 0.156 $\pm$ 0.027 & 0.003 & 0.062 $\pm$ 0.011 & 0.019 $\pm$ 0.001 & 2.52 $\pm$ 0.29 & 1.08 $\pm$ 0.37 & 8.9\\
+1000 & 3 & 0.088 $\pm$ 0.007 & 0.005 & 0.038 $\pm$ 0.008 & 0.012 $\pm$ 0.002 & 1.47 $\pm$ 0.03 & 0.18 $\pm$ 0.03 & 22.6\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_e2_population.pdf}
+\caption{E2: relative capital gap with the fitted $c/N+\Delta_0$ curve and the finite-$N$ error of B1 itself (left), saving-policy gap (middle) and DP best-response gain (right) versus $N$ (log scale).}
+\label{fig:e2}
+\end{figure}
+
+H2 predicted $\Delta(N)\approx c/N+\Delta_0$. The data (Table~\ref{tab:e2}, Figure~\ref{fig:e2}) show that the \emph{learning floor dominates}. The capital gap is $15.5\%$, $15.4\%$, $13.6\%$ and $15.6\%$ for $N=10,30,100,300$, and $8.8\%$ for $N=1000$. The least-squares fit gives $c=0.33$ and $\Delta_0=12.8\%$ with $R^2=0.22$; a $c/\sqrt N+\Delta_0$ fit does no better ($R^2=0.33$). The gap is in fact ordered by the \emph{sample budget} rather than by $N$: the worst run ($N=300$, one economy per iteration) has the fewest household-steps ($1.8\times10^7$) and the best ($N=1000$) the most ($6\times10^7$), so the improvement at $N=1000$ cannot be attributed to vanishing price impact.
+
+Price impact itself is visible only at the smallest $N$. At $N=10$, B1 executed in the simulator \emph{loses} welfare relative to the learners (W-loss $-1.54\%$), and the DP best response computed at mean prices is a \emph{worse} deviation ($-0.33\%$). With ten households, prices fluctuate strongly (the s.d.\ of $\kappa$ across economies under B1 is $1.22$, against $0.15$ at $N=100$), and a price-taking policy that ignores this volatility is no longer optimal, while learners adapt to the actual dynamics. For $N\ge30$ the known-model reference is the better policy again.
+
+\emph{Verdict on H2: not supported at our training budget.} An $O(1/N)$ effect exists in the benchmark itself (B1-sim gap) but is swamped by a ${\approx}13\%$ learning floor in MARL.
+
+\subsection{E3: Does information help?}
+
+\begin{table}[t]
+\centering
+\caption{E3: observation levels (IPPO, $N=100$). conv.\ iter: first evaluation reaching 95\% of the final welfare improvement (mean over seeds).}
+\label{tab:e3}
+\small
+\begin{tabular}{lccccccc}
+\toprule
+Obs. & $n$ & $|\Delta\kappa|/\kappa^\star$ & $p$-gap & $h$-gap & W-loss (\%) & DP-BR (\%) & conv. iter\\
+\midrule
+O0 & 3 & 0.184 $\pm$ 0.002 & 0.044 $\pm$ 0.008 & 0.012 $\pm$ 0.001 & 1.21 $\pm$ 0.08 & 0.81 $\pm$ 0.05 & 33\\
+O1 & 3 & 0.158 $\pm$ 0.016 & 0.036 $\pm$ 0.006 & 0.012 $\pm$ 0.002 & 1.27 $\pm$ 0.27 & 0.49 $\pm$ 0.17 & 27\\
+O2 & 3 & 0.157 $\pm$ 0.003 & 0.037 $\pm$ 0.006 & 0.012 $\pm$ 0.000 & 1.19 $\pm$ 0.06 & 0.48 $\pm$ 0.05 & 33\\
+O3 & 5 & 0.136 $\pm$ 0.010 & 0.047 $\pm$ 0.010 & 0.014 $\pm$ 0.001 & 1.36 $\pm$ 0.10 & 0.40 $\pm$ 0.07 & 40\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_e3_information.pdf}
+\caption{E3: relative capital gap (left) and welfare loss (middle) by observation level (mean $\pm$ s.d.), and the evaluation welfare during training (right; dashed: B1).}
+\label{fig:e3}
+\end{figure}
+
+Table~\ref{tab:e3} and Figure~\ref{fig:e3} show that information matters for \emph{aggregates and exploitability} but not for welfare. Adding lagged prices (O0$\to$O1) cuts the capital gap from $18.4\%$ to $15.8\%$ and the DP best-response gain from $0.81\%$ to $0.49\%$: without prices a household cannot condition on the return to saving, so it under-reacts to it. Aggregate capital and labor (O2) add nothing beyond prices, which is expected because in a competitive economy prices are sufficient statistics for the aggregates. The TaxAI-style group statistics (O3) reduce the gap further to $13.6\%$ and the exploitability to $0.40\%$. The welfare loss is flat at $1.2$--$1.4\%$ across all levels, so most of the welfare comes from the individual state $(a,e)$, which every level observes. All levels converge within about 40 iterations.
+
+\emph{Verdict on H3: partially supported.} Prices (O1) help as predicted, but O2 adds nothing while O3 still helps, the opposite of the predicted ordering.
+
+\subsection{E4: Do learners respond to taxes like the equilibrium?}
+
+\begin{table}[t]
+\centering
+\caption{E4: proportional income tax $\tau$ with revenue wasted ($\psi=0$) or rebated lump-sum ($\psi=1$). IPPO, O3, 3 seeds ($\tau=0$: 5 seeds from E1). B1 columns: exact stationary equilibrium ($K/N$, hours) and B1 in simulator (Gini, $\bar J$).}
+\label{tab:e4}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ccccccccc}
+\toprule
+$\tau$ & $\psi$ & $K/N$ MARL & $K/N$ B1 & hours MARL & hours B1 & Gini MARL & Gini B1 & $\bar J$ MARL / B1\\
+\midrule
+0.1 & 0 & 2.327 $\pm$ 0.012 & 2.798 & 0.336 $\pm$ 0.002 & 0.338 & 0.454 & 0.538 & -85.8 / -85.3\\
+0.2 & 0 & 2.193 $\pm$ 0.048 & 2.620 & 0.342 $\pm$ 0.001 & 0.342 & 0.468 & 0.531 & -90.6 / -89.9\\
+0.3 & 0 & 1.985 $\pm$ 0.034 & 2.417 & 0.351 $\pm$ 0.001 & 0.348 & 0.477 & 0.523 & -96.3 / -95.5\\
+0.0 & 1 & 2.520 $\pm$ 0.032 & 2.953 & 0.334 $\pm$ 0.002 & 0.333 & 0.464 & 0.545 & -81.8 / -81.3\\
+0.1 & 1 & 2.218 $\pm$ 0.048 & 2.632 & 0.320 $\pm$ 0.002 & 0.321 & 0.460 & 0.551 & -81.2 / -80.6\\
+0.2 & 1 & 1.943 $\pm$ 0.015 & 2.306 & 0.307 $\pm$ 0.001 & 0.307 & 0.481 & 0.556 & -80.8 / -80.1\\
+0.3 & 1 & 1.650 $\pm$ 0.029 & 1.976 & 0.291 $\pm$ 0.000 & 0.294 & 0.473 & 0.563 & -80.9 / -80.0\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{E4: elasticities with respect to the net-of-tax rate, $\varepsilon_X=d\log X/d\log(1-\tau)$, from a least-squares fit over $\tau\in\{0,0.1,0.2,0.3\}$. $K$: capital per household; $h$: mean hours.}
+\label{tab:e4el}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Revenue use & $\varepsilon_K$ MARL & $\varepsilon_K$ B1 & $\varepsilon_h$ MARL & $\varepsilon_h$ B1\\
+\midrule
+wasted ($\psi=0$) & 0.65 & 0.56 & -0.15 & -0.12\\
+rebated ($\psi=1$) & 1.18 & 1.13 & 0.38 & 0.36\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_e4_tax.pdf}
+\caption{E4: capital, hours and wealth Gini versus $\tau$. Solid: IPPO (mean $\pm$ s.d.); dashed: B1.}
+\label{fig:e4}
+\end{figure}
+
+The tax experiment gives the strongest agreement (Tables~\ref{tab:e4}--\ref{tab:e4el}, Figure~\ref{fig:e4}).
+
+\textbf{Signs.} MARL reproduces every qualitative prediction of the equilibrium. Capital falls with $\tau$ in both regimes. Hours \emph{rise} with $\tau$ when revenue is wasted, because households are poorer and the income effect dominates. Hours \emph{fall} when revenue is rebated, because the rebate removes the income effect and the substitution effect dominates. The rebate regime cuts capital more.
+
+\textbf{Magnitudes.} The elasticities with respect to the net-of-tax rate are close to B1's: $\varepsilon_K=0.65$ vs.\ $0.56$ and $\varepsilon_h=-0.15$ vs.\ $-0.12$ with wasted revenue, and $\varepsilon_K=1.18$ vs.\ $1.13$ and $\varepsilon_h=0.38$ vs.\ $0.36$ with the rebate. Hours match B1 to within $0.003$ in every regime. The capital shortfall is a nearly constant \emph{level} effect: learned $\kappa$ is $83$--$86\%$ of $\kappa^\star$ in all seven regimes, so it largely cancels in comparative statics.
+
+\textbf{Where MARL fails.} Inequality responds to taxes with the wrong sensitivity. In B1, the rebate raises the Gini (from $0.545$ to $0.563$) because the lump sum makes low-wealth households less willing to save, while wasted revenue lowers it (to $0.523$). MARL's Gini stays at $0.45$--$0.48$ with no clear trend in either regime. In 13 of the 49 runs (mostly $\tau\ge0.2$ and O0), under-saving pushes the learned after-tax return above $1/\beta$, which is impossible in a stationary equilibrium; there the 200-period finite-horizon DP best response is used.
+
+\emph{Verdict on H4: supported} for the signs and, unexpectedly, also for the magnitudes of the aggregate responses; \emph{not supported} for the distributional response.
+
+\subsection{Summary of findings}
+
+\begin{table}[h]
+\centering
+\caption{Answers to the research questions.}
+\label{tab:verdicts}
+\small
+\begin{tabular}{@{}p{2.4cm}p{2.6cm}p{9.6cm}@{}}
+\toprule
+\textbf{Hypothesis} & \textbf{Verdict} & \textbf{Evidence}\\
+\midrule
+H1 equilibrium recovery & supported & hours exact, welfare loss $1.3$--$1.4\%$; capital $-14\%$; tails of the wealth distribution missing (Table~\ref{tab:e1}, Fig.~\ref{fig:e1wealth})\\
+H2 $1/N$ price impact & not supported & capital gap flat at ${\approx}13\%$ for $N\le300$, fit $R^2=0.22$; price impact visible only at $N=10$ (Table~\ref{tab:e2})\\
+H3 information & partially & prices help (gap $18.4\%\to15.8\%$), aggregates do not, group statistics help a little (Table~\ref{tab:e3})\\
+H4 tax response & supported (aggregates) & same signs and similar elasticities for $K$ and $h$; inequality response not reproduced (Table~\ref{tab:e4el})\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%==============================================================
+\section{Discussion and Conclusion}
+%==============================================================
+
+\textbf{Summary.} Placing MARL households and an exact equilibrium solver in the \emph{same} finite-$N$ economy turns qualitative claims of the form ``learners behave like an economy'' into measured gaps. Shared-policy PPO learns the intensive margins well: hours, the saving ratio away from the constraint, and the responses to taxes. Welfare comes within $1.4\%$ of equilibrium. Two things are systematically missed: precautionary wealth accumulation (a ${\approx}14\%$ capital shortfall that persists across $N$, observation levels and tax regimes) and the shape of the wealth distribution (too few constrained households, too thin a right tail). We conjecture that both stem from long-horizon credit assignment: the benefit of an extra unit of saving arrives decades later and only in rare bad states, so it is weak in a 200-step, $\gamma=0.96$ return and easy for a smooth stochastic policy to under-fit. The same reason explains why the model-free exploitability estimate (PPO-BR $\approx0$) underestimates the model-based one (DP-BR $0.4\%$).
+
+\textbf{Success criteria.} The proposal defined success as (i) a simulator that passes the accounting test, (ii) a working B1 solver that passes its sanity checks, and (iii) quantified answers to the hypotheses, whichever way they go. All three are met; the stretch goals MAPPO, E3 and E4 were also completed.
+
+\textbf{Limitations.} (i) Training budget: a single learning rate was tuned on one seed and every run uses 300 iterations; budgets differ across $N$ because the number of economies per iteration is an integer, which confounds E2. (ii) Only E1 has the 5 seeds planned in the proposal; E2--E4 use 3. (iii) DP best responses assume constant prices, which is inaccurate at $N=10$, and require a finite-horizon variant when learned returns exceed $1/\beta$. (iv) Only proportional taxes ($\xi=0$) and $\theta=1.5$ were run, although the simulator supports HSV progressivity and wealth taxes; ablations A1--A4 were not run. (v) Evaluation starts every economy from the same lognormal draw, and stationary statistics use 200 periods after a 300-period burn-in. (vi) The convergence guarantees of \cite{xu2023} do not transfer to our neural, finite-$N$ setting.
+
+\textbf{Future work.} Longer training or a curriculum on the horizon, to test whether the capital floor is a sample-budget effect; recurrent policies; progressive taxation; the entropy-regularized B1 of ablation A4, to separate the gap caused by stochastic policies from the learning gap; and a learning government on top of the household equilibrium, as in TaxAI, with B1 as a reference for the households' response.
+
+\subsection*{Code availability and reproducibility}\label{sec:repo}
+All code, the 49 trained models, raw results and figure scripts are available at \url{https://github.com/AryanMeshram059/fai-group42-econ-marl}. The full pipeline is \texttt{pytest tests} (16 tests) $\rightarrow$ \texttt{scripts/calibrate.py} $\rightarrow$ \texttt{scripts/run\_benchmarks.py} $\rightarrow$ \texttt{scripts/run\_experiments.py} (49 runs, resumable) $\rightarrow$ \texttt{scripts/make\_report\_assets.py}. Every run folder \texttt{results/runs/<algo>\_O<obs>\_N<N>\_tau<$\tau$>\_psi<$\psi$>\_s<seed>/} contains the model weights, configuration, training curve, log and \texttt{eval.json}, so all tables and figures in Section~\ref{sec:results} can be regenerated from the stored models without retraining, and any single run can be retrained with \texttt{scripts/train.py} and re-evaluated with \texttt{scripts/evaluate\_run.py}.
+
+%==============================================================
+\section{Contribution}
+%==============================================================
+
+The work was divided into four equal shares, each consisting of one system component from the proposal, one experiment and the matching parts of the report. The \emph{Status} column records whether the assigned task was delivered in the final submission.
+
+\begin{table}[h]
+\centering
+\caption{Task assignment and completion.}
+\label{tab:contrib}
+\small
+\begin{tabular}{@{}p{2.8cm}p{9.4cm}p{2.3cm}@{}}
+\toprule
+\textbf{Member} & \textbf{Assigned tasks} & \textbf{Status} \\
+\midrule
+Aryan Meshram & \textbf{C1 Environment:} vectorized simulator (prices, taxes, rebate, safeguards), Rouwenhorst process, accounting-identity tests, calibration of $\chi$ and initial wealth. \textbf{E2:} population-size runs and the $c/N+\Delta_0$ fit. \textbf{Report:} problem formulation, Sections~\ref{sec:c1} and E2. & Fulfilled \\
+Chaitanya Sharma & \textbf{C2--C3 Benchmarks:} EGM household solver with endogenous labor, histogram distribution, Brent equilibrium, VFI cross-check and B1 tests; baselines B0, B1-in-simulator, B2 and Random. \textbf{E4:} B1 for the seven tax regimes, tax runs and elasticities. \textbf{Report:} Sections~\ref{sec:c2}--\ref{sec:c3} and E4. & Fulfilled \\
+Pratik Kumar Dhakar & \textbf{C4 Learning:} shared-policy IPPO and MAPPO with Beta policies, observation levels O0--O3, global summary for the MAPPO critic, learning-rate tuning, parallel multi-seed training of the 49-run grid. \textbf{E3:} observation-level runs. \textbf{Report:} Section~\ref{sec:c4} and E3. & Fulfilled \\
+Saksham Chourasia & \textbf{C5--C6 Evaluation:} aggregate, policy, welfare and inequality metrics, DP and PPO best-response exploitability, report-asset script (tables and figures). \textbf{E1:} IPPO vs.\ MAPPO vs.\ baselines. \textbf{Report:} Sections~\ref{sec:c5}--\ref{sec:c6}, E1 and integration of the final report. & Fulfilled \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Items of the proposal that were \emph{not} completed are not tied to a single member: the ablations A1--A4 (marked ``if time permits'') were not run, and E2--E4 use 3 rather than 5 seeds because of the compute budget.
+
+\newpage
+
+%==============================================================
+% References
+%==============================================================
+\bibliographystyle{unsrt}
+
+\begin{thebibliography}{99}
+
+\bibitem{mi2024taxai}
+Q.~Mi, S.~Xia, Y.~Song, H.~Zhang, S.~Zhu, and J.~Wang.
+\newblock {TaxAI}: A dynamic economic simulator and benchmark for multi-agent reinforcement learning.
+\newblock In \emph{Proc.\ AAMAS}, pages 1390--1398, 2024.
+
+\bibitem{aiyagari1994}
+S.~R. Aiyagari.
+\newblock Uninsured idiosyncratic risk and aggregate saving.
+\newblock \emph{Quarterly Journal of Economics}, 109(3):659--684, 1994.
+
+\bibitem{huggett1993}
+M.~Huggett.
+\newblock The risk-free rate in heterogeneous-agent incomplete-insurance economies.
+\newblock \emph{Journal of Economic Dynamics and Control}, 17(5--6):953--969, 1993.
+
+\bibitem{heathcote2017}
+J.~Heathcote, K.~Storesletten, and G.~L. Violante.
+\newblock Optimal tax progressivity: An analytical framework.
+\newblock \emph{Quarterly Journal of Economics}, 132(4):1693--1754, 2017.
+
+\bibitem{xu2023}
+R.~Xu, Y.~Min, T.~Wang, Z.~Wang, M.~I. Jordan, and Z.~Yang.
+\newblock Finding regularized competitive equilibria of heterogeneous agent macroeconomic models via reinforcement learning.
+\newblock In \emph{Proc.\ AISTATS}, PMLR 206, 2023.
+
+\bibitem{lasry2007}
+J.-M. Lasry and P.-L. Lions.
+\newblock Mean field games.
+\newblock \emph{Japanese Journal of Mathematics}, 2(1):229--260, 2007.
+
+\bibitem{light2022}
+B.~Light and G.~Y. Weintraub.
+\newblock Mean field equilibrium: Uniqueness, existence, and comparative statics.
+\newblock \emph{Operations Research}, 70(1):585--605, 2022.
+
+\bibitem{zheng2022}
+S.~Zheng et~al.
+\newblock The {AI} {E}conomist: Taxation policy design via two-level deep multiagent reinforcement learning.
+\newblock \emph{Science Advances}, 8(18), 2022.
+
+\bibitem{curry2022}
+M.~Curry, A.~Trott, S.~Phade, Y.~Bai, and S.~Zheng.
+\newblock Finding general equilibria in many-agent economic simulations using deep reinforcement learning.
+\newblock arXiv:2201.01163, 2022.
+
+\bibitem{yu2022}
+C.~Yu et~al.
+\newblock The surprising effectiveness of {PPO} in cooperative multi-agent games.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume~35, 2022.
+
+\bibitem{dewitt2020}
+C.~Schroeder de~Witt et~al.
+\newblock Is independent learning all you need in the {StarCraft} multi-agent challenge?
+\newblock arXiv:2011.09533, 2020.
+
+\bibitem{schulman2017}
+J.~Schulman, F.~Wolski, P.~Dhariwal, A.~Radford, and O.~Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock arXiv:1707.06347, 2017.
+
+\bibitem{kopecky2010}
+K.~A. Kopecky and R.~M.~H. Suen.
+\newblock Finite state {M}arkov-chain approximations to highly persistent processes.
+\newblock \emph{Review of Economic Dynamics}, 13(3):701--714, 2010.
+
+\bibitem{carroll2006}
+C.~D. Carroll.
+\newblock The method of endogenous gridpoints for solving dynamic stochastic optimization problems.
+\newblock \emph{Economics Letters}, 91(3):312--320, 2006.
+
+\bibitem{young2010}
+E.~R. Young.
+\newblock Solving the incomplete markets model with aggregate uncertainty using the {K}rusell--{S}mith algorithm and non-stochastic simulations.
+\newblock \emph{Journal of Economic Dynamics and Control}, 34(1):36--41, 2010.
+
+\bibitem{schulman2016gae}
+J.~Schulman, P.~Moritz, S.~Levine, M.~I. Jordan, and P.~Abbeel.
+\newblock High-dimensional continuous control using generalized advantage estimation.
+\newblock In \emph{Proc.\ ICLR}, 2016.
+
+\end{thebibliography}
+
+\end{document}
