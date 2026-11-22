@@ -19,6 +19,7 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{caption}
+\usepackage{placeins}  % \FloatBarrier: keeps all result floats before the Discussion section
 \captionsetup{font=small,labelfont=bf,skip=4pt}
 \usepackage{hyperref}
 
@@ -244,7 +245,7 @@ $N$ & $n$ & $|\Delta\kappa|/\kappa^\star$ & B1-sim gap & $p$-gap & $h$-gap & W-l
 The \emph{learning floor dominates} (Table~\ref{tab:e2}, Figure~\ref{fig:e2}). The capital gap is $15.5$, $15.4$, $13.6$ and $15.6\%$ for $N=10,30,100,300$ and $8.8\%$ for $N=1000$; the fit gives $\Delta_0=12.8\%$ with $R^2=0.22$ (a $c/\sqrt N$ fit: $R^2=0.33$). The gap is ordered by the \emph{sample budget} rather than by $N$: the worst case ($N=300$) has the fewest household-steps and the best ($N=1000$) the most, so the improvement at $N=1000$ cannot be attributed to vanishing price impact. Price impact is visible only at $N=10$, where prices fluctuate strongly (s.d.\ of $\kappa$ under B1 $1.22$, against $0.15$ at $N=100$): the price-taking B1 policy then \emph{loses} welfare relative to the learners ($-1.54\%$) and the DP deviation computed at mean prices is worse ($-0.33\%$), while learners adapt to the actual dynamics. \emph{H2: not supported at our budget}; an $O(1/N)$ effect exists in B1 itself but is swamped by a ${\approx}13\%$ learning floor.
 
 \subsection{E3: Does information help?}
-\begin{table}[t]
+\begin{table}[!htbp]
 \centering
 \caption{E3: observation levels (IPPO, $N=100$). conv.\ iter: first evaluation reaching 95\% of the final welfare improvement.}
 \label{tab:e3}
@@ -264,7 +265,7 @@ O3 & 5 & 0.136 $\pm$ 0.010 & 0.047 $\pm$ 0.010 & 0.014 $\pm$ 0.001 & 1.36 $\pm$ 
 Information matters for \emph{aggregates and exploitability} but not for welfare (Table~\ref{tab:e3}). Adding lagged prices (O0$\to$O1) cuts the capital gap from $18.4\%$ to $15.8\%$ and the DP best-response gain from $0.81\%$ to $0.49\%$: without prices a household cannot condition on the return to saving. Aggregates (O2) add nothing, as expected when prices are sufficient statistics for them, while the group statistics of O3 reduce the gap further to $13.6\%$. The welfare loss is flat at $1.2$--$1.4\%$, so most welfare comes from the individual state $(a,e)$ that every level observes. \emph{H3: partially supported}; prices help, but O2 adds nothing while O3 still helps, the opposite of the predicted ordering.
 
 \subsection{E4: Do learners respond to taxes like the equilibrium?}
-\begin{table}[t]
+\begin{table}[!htbp]
 \centering
 \caption{E4: income tax $\tau$ with revenue wasted ($\psi=0$) or rebated ($\psi=1$); IPPO, O3, 3 seeds ($\tau=0$: 5). B1: exact equilibrium ($K/N$, hours) and B1 in simulator (Gini, $\bar J$).}
 \label{tab:e4}
@@ -284,7 +285,7 @@ $\tau$ & $\psi$ & $K/N$ MARL & $K/N$ B1 & hours MARL & hours B1 & Gini MARL & Gi
 \end{tabular}}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/fig_e4_tax.pdf}
 \caption{E4: capital, hours and wealth Gini versus $\tau$. Solid: IPPO (mean $\pm$ s.d.); dashed: B1.}
@@ -293,6 +294,7 @@ $\tau$ & $\psi$ & $K/N$ MARL & $K/N$ B1 & hours MARL & hours B1 & Gini MARL & Gi
 
 The tax experiment gives the strongest agreement (Table~\ref{tab:e4}, Figure~\ref{fig:e4}). \textbf{Signs:} MARL reproduces every qualitative prediction of B1. Capital falls with $\tau$ in both regimes; hours \emph{rise} with $\tau$ when revenue is wasted (households are poorer, the income effect dominates) and \emph{fall} when it is rebated (the rebate removes the income effect). \textbf{Magnitudes:} the elasticities with respect to $1-\tau$ (least-squares slopes of logs) are close to B1's: $\varepsilon_K=0.65$ vs.\ $0.56$ and $\varepsilon_h=-0.15$ vs.\ $-0.12$ with wasted revenue, $\varepsilon_K=1.18$ vs.\ $1.13$ and $\varepsilon_h=0.38$ vs.\ $0.36$ with the rebate. Hours match B1 within $0.003$ in every regime, and the capital shortfall is a nearly constant level effect (learned $\kappa$ is $83$--$86\%$ of $\kappa^\star$ in all seven regimes) that cancels in comparative statics. \textbf{Failure:} in B1 the rebate raises the Gini ($0.545\to0.563$) and wasted revenue lowers it ($0.523$); MARL's Gini stays at $0.45$--$0.48$ with no clear trend. \emph{H4: supported} for the signs and, unexpectedly, the magnitudes of aggregate responses; \emph{not supported} for the distributional response.
 
+\FloatBarrier % place Table 3, Table 4 and the E4 figure before the Discussion section
 %==============================================================
 \section{Discussion and Conclusion}
 %==============================================================
@@ -307,7 +309,7 @@ Placing MARL households and an exact equilibrium solver in the \emph{same} finit
 %==============================================================
 The work was divided into four equal shares, each consisting of one system component, one experiment and the matching parts of the report. The \emph{Status} column records whether the assigned task was delivered.
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{Task assignment and completion.}
 \label{tab:contrib}
@@ -326,6 +328,7 @@ Saksham Chourasia & \textbf{C5--C6 Evaluation:} aggregate, policy, welfare and i
 
 Items of the proposal not completed are not tied to a single member: the ablations A1--A4 (``if time permits'') were not run, and E2--E4 use 3 rather than 5 seeds because of the compute budget.
 
+\FloatBarrier % the contribution table stays in its section, before the references
 %==============================================================
 % References
 %==============================================================
