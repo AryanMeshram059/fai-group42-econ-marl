@@ -7,7 +7,10 @@ We simulate a finite-N Bewley–Huggett–Aiyagari economy in which every househ
 each period, with income tax and a lump-sum rebate. We solve the **same** economy exactly with a dynamic-programming
 benchmark (B1), train shared-policy **IPPO** and **MAPPO** households in it, and measure how far the learned economy is
 from the competitive equilibrium. The gaps we measure cover aggregates, individual policies, welfare, inequality and
-exploitability. The full write-up is in [`report/`](report) (LaTeX, `report/main.tex`).
+exploitability.
+
+**Final report:** [`report/FAI_Group42_final.tex`](report/FAI_Group42_final.tex) (8 pages, PRIMEarxiv template).
+`report/main.tex` with `report/sections/` is an earlier, longer draft of the same paper and is not the submission.
 
 ## Headline results
 
@@ -84,6 +87,17 @@ The trained models of all 49 runs are committed, so `evaluate_run.py` and `make_
 without retraining. Runs are seeded. Reruns should match up to the floating-point nondeterminism of multi-threaded
 PyTorch.
 
+**Checking the paper's numbers (about 1 minute, no retraining):** run `python scripts/make_report_assets.py`, then
+`git status`. It rebuilds `report/tables/*.tex` and `results/summary.json` from the stored `eval.json` files, and these
+come out byte-identical to the committed versions. The tables in the report are copies of `report/tables/*.tex`.
+Figure PDFs differ only in their embedded creation timestamp.
+
+## Compiling the report
+
+Upload the `report/` folder to Overleaf (or zip it and use *New Project → Upload Project*), set **Main document** to
+`FAI_Group42_final.tex`, and compile with pdfLaTeX. It uses `PRIMEarxiv.sty` from the same folder and standard
+packages only (amsmath, booktabs, graphicx, algorithm/algpseudocode, caption, placeins, hyperref).
+
 ## Repository layout
 
 ```
@@ -104,7 +118,8 @@ scripts/            calibrate, train, evaluate_run, run_benchmarks, run_experime
 tests/              test_accounting.py (10 tests), test_b1.py (6 tests)
 results/            benchmarks.json, summary.json, runs/ (49 runs), tune/ (learning-rate tuning)
 figures/            PNG figures;  report/figures: PDF versions used in the paper
-report/             main.tex, sections/, tables/ (generated), numbers/ (generated), arxiv.sty
+report/             FAI_Group42_final.tex (submitted report), PRIMEarxiv.sty, tables/ and figures/ (generated);
+                    main.tex + sections/ (earlier draft), arxiv.sty (fallback style)
 ```
 
 ## Reference
