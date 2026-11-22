@@ -1,7 +1,7 @@
 # Learning to Work and Save in a Shared Economy
 
 **Decentralized MARL versus the known-model Aiyagari equilibrium.** FAI final project, Group 42:
-Aryan Meshram (24110054), Chaitanya Sharma (23110072), Pratik Kumar Dhaker (24110277), Saksham Chourasia (24110312).
+Aryan Meshram (24110054), Chaitanya Sharma (23110072), Pratik Kumar Dhakar (24110277), Saksham Chourasia (24110312).
 
 We simulate a finite-N Bewley–Huggett–Aiyagari economy in which every household chooses a saving ratio and hours
 each period, with income tax and a lump-sum rebate. We solve the **same** economy exactly with a dynamic-programming
